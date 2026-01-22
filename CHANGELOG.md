@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/MeninoNias/lofi-bot/compare/v2.1.0...v2.2.0) (2026-01-22)
+
+
+### Features
+
+* add Docker setup and improve documentation ([965183b](https://github.com/MeninoNias/lofi-bot/commit/965183beda47c50e7d3a5c8f79e6b35b3a1b8ea3))
+
 ## [2.1.0](https://github.com/MeninoNias/lofi-bot/compare/v2.0.0...v2.1.0) (2026-01-22)
 
 
