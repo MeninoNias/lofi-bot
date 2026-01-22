@@ -4,6 +4,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    profiles:
+      - dev
+      - prod
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
       - DATABASE_URL=postgresql://lofi:lofi@db:5432/lofi_bot
@@ -12,12 +15,18 @@ services:
 
   db:
     image: postgres:16-alpine
+    profiles:
+      - dev
+      - prod
+      - infra
     environment:
       - POSTGRES_USER=lofi
       - POSTGRES_PASSWORD=lofi
       - POSTGRES_DB=lofi_bot
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U lofi -d lofi_bot"]
       interval: 5s
