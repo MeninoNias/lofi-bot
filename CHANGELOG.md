@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.1](https://github.com/MeninoNias/lofi-bot/compare/v2.2.0...v2.2.1) (2026-01-22)
+
+
+### Bug Fixes
+
+* update banner image path in README ([51db8cb](https://github.com/MeninoNias/lofi-bot/commit/51db8cbe7362cba93f0b091c3b2bddfccac59dbf))
+* update banner image path in README ([8b8c99a](https://github.com/MeninoNias/lofi-bot/commit/8b8c99af61fa88a265e97f4ce9ff75812381541e))
+
 ## [2.2.0](https://github.com/MeninoNias/lofi-bot/compare/v2.1.0...v2.2.0) (2026-01-22)
 
 
