@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.0](https://github.com/MeninoNias/lofi-bot/compare/v2.2.1...v2.3.0) (2026-01-22)
+
+
+### Features
+
+* add pino structured logging and fix stream timeout warnings ([cbce708](https://github.com/MeninoNias/lofi-bot/commit/cbce708d15bb4a3b492dae98f504cb213f9978ae))
+* add pino structured logging and fix stream timeout warnings ([bb2352d](https://github.com/MeninoNias/lofi-bot/commit/bb2352d497dfff9c85c024eb219254f8ace33b06))
+
 ## [2.2.1](https://github.com/MeninoNias/lofi-bot/compare/v2.2.0...v2.2.1) (2026-01-22)
 
 
