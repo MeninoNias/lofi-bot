@@ -1,6 +1,7 @@
 import type { Message } from "discord.js";
 import type { ICommand } from "@/commands/interfaces/ICommand";
 import { isAdmin } from "@/utils/permissions";
+import { commandLogger } from "@/utils/logger";
 import { MessageView } from "@/views/MessageView";
 
 export class CommandController {
@@ -42,7 +43,7 @@ export class CommandController {
       const result = await command.execute({ message, args });
       await message.reply(result.message);
     } catch (error) {
-      console.error(`[CommandController] Error executing ${commandName}:`, error);
+      commandLogger.error({ command: commandName, err: error }, "Error executing command");
       await message.reply("An unexpected error occurred. Please try again.");
     }
   }

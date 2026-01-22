@@ -1,5 +1,6 @@
 import type { CommandContext, CommandResult } from "@/models/types";
 import type { IStationService } from "@/services/interfaces/IStationService";
+import { commandLogger } from "@/utils/logger";
 import { MessageView } from "@/views/MessageView";
 import type { ICommand } from "./interfaces/ICommand";
 
@@ -34,7 +35,7 @@ export class SetDefaultCommand implements ICommand {
       await this.stationService.setDefaultStation(id);
       return { success: true, message: this.view.stationSetDefault(station) };
     } catch (error) {
-      console.error("[SetDefaultCommand] Error:", error);
+      commandLogger.error({ command: "setdefault", stationId: id, err: error }, "Failed to set default station");
       return { success: false, message: "Failed to set default station. Please try again." };
     }
   }

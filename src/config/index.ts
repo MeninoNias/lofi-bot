@@ -1,3 +1,5 @@
+import { configLogger } from "@/utils/logger";
+
 export const config = {
   discord: {
     token: process.env.DISCORD_TOKEN || "",
@@ -14,11 +16,11 @@ export const config = {
 
 export function validateConfig(): void {
   if (!config.discord.token) {
-    console.error("[Config] DISCORD_TOKEN environment variable is required");
+    configLogger.fatal("DISCORD_TOKEN environment variable is required");
     process.exit(1);
   }
   if (!config.database.url) {
-    console.error("[Config] DATABASE_URL environment variable is required");
+    configLogger.fatal("DATABASE_URL environment variable is required");
     process.exit(1);
   }
 }

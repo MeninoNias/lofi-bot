@@ -1,15 +1,18 @@
 import {
   AudioPlayerStatus,
   VoiceConnectionStatus,
+  StreamType,
   createAudioPlayer,
   createAudioResource,
   entersState,
   joinVoiceChannel,
+  NoSubscriberBehavior,
 } from "@discordjs/voice";
 import type { VoiceBasedChannel } from "discord.js";
 import { Readable } from "node:stream";
 import { config } from "@/config";
 import type { GuildAudioState } from "@/models/types";
+import { streamLogger, playerLogger, logger } from "@/utils/logger";
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { IStreamService } from "./interfaces/IStreamService";
 
@@ -37,7 +40,11 @@ export class AudioService implements IAudioService {
 
     await entersState(connection, VoiceConnectionStatus.Ready, 30000);
 
-    const player = createAudioPlayer();
+    const player = createAudioPlayer({
+      behaviors: {
+        noSubscriber: NoSubscriberBehavior.Play,
+      },
+    });
     connection.subscribe(player);
 
     const state: GuildAudioState = {
@@ -78,7 +85,9 @@ export class AudioService implements IAudioService {
       }
 
       const nodeStream = Readable.fromWeb(state.ffmpegProcess.stdout as import("stream/web").ReadableStream);
-      const resource = createAudioResource(nodeStream);
+      const resource = createAudioResource(nodeStream, {
+        inputType: StreamType.OggOpus,
+      });
       state.player.play(resource);
       state.isPlaying = true;
       state.reconnectAttempts = 0;
@@ -86,23 +95,24 @@ export class AudioService implements IAudioService {
       // Store the URL for reconnection
       (state as GuildAudioState & { currentStreamUrl?: string }).currentStreamUrl = streamUrl;
 
-      console.log("[Stream] Started playing radio");
+      streamLogger.info("Started playing radio");
     } catch (error) {
-      console.error("[Stream] Error starting stream:", error);
+      streamLogger.error({ err: error }, "Error starting stream");
       await this.handleStreamError(state);
     }
   }
 
   private async handleStreamError(state: GuildAudioState): Promise<void> {
     if (state.reconnectAttempts >= config.stream.maxReconnectAttempts) {
-      console.error("[Stream] Max reconnection attempts reached");
+      streamLogger.error({ maxAttempts: config.stream.maxReconnectAttempts }, "Max reconnection attempts reached");
       state.isPlaying = false;
       return;
     }
 
     state.reconnectAttempts++;
-    console.log(
-      `[Stream] Reconnecting... Attempt ${state.reconnectAttempts}/${config.stream.maxReconnectAttempts}`
+    streamLogger.warn(
+      { attempt: state.reconnectAttempts, maxAttempts: config.stream.maxReconnectAttempts },
+      "Reconnecting..."
     );
 
     await Bun.sleep(config.stream.reconnectDelayMs);
@@ -134,7 +144,7 @@ export class AudioService implements IAudioService {
       }
       state.connection.destroy();
       this.guildStates.delete(guildId);
-      console.log(`[Cleanup] Cleaned up resources for guild ${guildId}`);
+      logger.info({ guildId }, "Cleaned up resources");
     }
   }
 
@@ -144,16 +154,16 @@ export class AudioService implements IAudioService {
     }
   }
 
-  private setupPlayerListeners(state: GuildAudioState, _guildId: string): void {
+  private setupPlayerListeners(state: GuildAudioState, guildId: string): void {
     state.player.on(AudioPlayerStatus.Idle, async () => {
       if (state.isPlaying) {
-        console.log("[Player] Stream ended unexpectedly, attempting reconnect");
+        playerLogger.warn({ guildId }, "Stream ended unexpectedly, attempting reconnect");
         await this.handleStreamError(state);
       }
     });
 
     state.player.on("error", async (error) => {
-      console.error("[Player] Error:", error.message);
+      playerLogger.error({ guildId, error: error.message }, "Player error");
       if (state.isPlaying) {
         await this.handleStreamError(state);
       }
