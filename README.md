@@ -1,3 +1,5 @@
+![Lofi Bot Banner](assets/images/banner.png)
+
 # lofi-bot
 
 A Discord bot that streams radio stations to voice channels. Built with Bun, TypeScript, and PostgreSQL.
@@ -99,24 +101,24 @@ To restrict admin commands (`!addstation`, `!removestation`, `!setdefault`) to s
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DISCORD_TOKEN` | Yes | Your Discord bot token |
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `ADMIN_ROLE_ID` | No | Role ID for admin commands |
+| Variable        | Required | Description                  |
+| --------------- | -------- | ---------------------------- |
+| `DISCORD_TOKEN` | Yes      | Your Discord bot token       |
+| `DATABASE_URL`  | Yes      | PostgreSQL connection string |
+| `ADMIN_ROLE_ID` | No       | Role ID for admin commands   |
 
 When using Docker Compose, `DATABASE_URL` is automatically set to connect to the bundled PostgreSQL container.
 
 ## Commands
 
-| Command | Description | Access |
-|---------|-------------|--------|
-| `!play [station]` | Join voice channel and play station | Everyone |
-| `!stop` | Stop streaming and leave voice channel | Everyone |
-| `!stations` | List all available stations | Everyone |
-| `!addstation <name> <url> [description]` | Add a new station | Admin |
-| `!removestation <id>` | Remove a station | Admin |
-| `!setdefault <id>` | Set the default station | Admin |
+| Command                                  | Description                            | Access   |
+| ---------------------------------------- | -------------------------------------- | -------- |
+| `!play [station]`                        | Join voice channel and play station    | Everyone |
+| `!stop`                                  | Stop streaming and leave voice channel | Everyone |
+| `!stations`                              | List all available stations            | Everyone |
+| `!addstation <name> <url> [description]` | Add a new station                      | Admin    |
+| `!removestation <id>`                    | Remove a station                       | Admin    |
+| `!setdefault <id>`                       | Set the default station                | Admin    |
 
 ## Development
 
