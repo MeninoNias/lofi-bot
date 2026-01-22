@@ -1,4 +1,4 @@
-![Lofi Bot Banner](assets/images/social-preview.png)
+![Lofi Bot Banner](assets/images/social-preview.jpg)
 
 # lofi-bot
 
