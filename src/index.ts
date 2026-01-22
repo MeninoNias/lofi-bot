@@ -1,27 +1,23 @@
-import {
-  Client,
-  GatewayIntentBits,
-  Events,
-  type Message,
-  type VoiceBasedChannel,
-} from "discord.js";
-import {
-  joinVoiceChannel,
-  createAudioPlayer,
-  createAudioResource,
-  AudioPlayerStatus,
-  VoiceConnectionStatus,
-  entersState,
-  type VoiceConnection,
-  type AudioPlayer,
-} from "@discordjs/voice";
-import ffmpegPath from "ffmpeg-static";
-import { spawn, type Subprocess } from "bun";
+import { Client, Events, GatewayIntentBits } from "discord.js";
+import { config, validateConfig } from "@/config";
+import { db } from "@/database/connection";
+import { stations } from "@/database/schema";
+import { StationRepository } from "@/repositories/StationRepository";
+import { AudioService } from "@/services/AudioService";
+import { StationService } from "@/services/StationService";
+import { StreamService } from "@/services/StreamService";
+import { PlayCommand } from "@/commands/PlayCommand";
+import { StopCommand } from "@/commands/StopCommand";
+import { StationsCommand } from "@/commands/StationsCommand";
+import { AddStationCommand } from "@/commands/AddStationCommand";
+import { RemoveStationCommand } from "@/commands/RemoveStationCommand";
+import { SetDefaultCommand } from "@/commands/SetDefaultCommand";
+import { CommandController } from "@/controllers/CommandController";
 
-const LOFI_STREAM_URL = "https://play.streamafrica.net/lofiradio";
-const RECONNECT_DELAY_MS = 5000;
-const MAX_RECONNECT_ATTEMPTS = 5;
+// Validate configuration
+validateConfig();
 
+// Initialize Discord client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -31,222 +27,55 @@ const client = new Client({
   ],
 });
 
-interface GuildAudioState {
-  connection: VoiceConnection;
-  player: AudioPlayer;
-  ffmpegProcess: Subprocess | null;
-  reconnectAttempts: number;
-  isPlaying: boolean;
-}
+// Dependency Injection - Build the object graph
+const stationRepository = new StationRepository(db);
+const stationService = new StationService(stationRepository);
+const streamService = new StreamService();
+const audioService = new AudioService(streamService);
 
-const guildStates = new Map<string, GuildAudioState>();
+// Initialize controller and register commands
+const commandController = new CommandController();
+commandController.registerCommands([
+  new PlayCommand(audioService, stationService),
+  new StopCommand(audioService),
+  new StationsCommand(stationService),
+  new AddStationCommand(stationService),
+  new RemoveStationCommand(stationService),
+  new SetDefaultCommand(stationService),
+]);
 
-function createFFmpegStream(): Subprocess {
-  if (!ffmpegPath) {
-    throw new Error("ffmpeg-static path not found");
-  }
-
-  return spawn({
-    cmd: [
-      ffmpegPath,
-      "-reconnect", "1",
-      "-reconnect_streamed", "1",
-      "-reconnect_delay_max", "5",
-      "-i", LOFI_STREAM_URL,
-      "-f", "opus",
-      "-ar", "48000",
-      "-ac", "2",
-      "-b:a", "96k",
-      "-",
-    ],
-    stdout: "pipe",
-    stderr: "ignore",
-  });
-}
-
-async function startStream(state: GuildAudioState): Promise<void> {
-  try {
-    if (state.ffmpegProcess) {
-      state.ffmpegProcess.kill();
-    }
-
-    state.ffmpegProcess = createFFmpegStream();
-    
-    if (!state.ffmpegProcess.stdout) {
-      throw new Error("Failed to create ffmpeg stdout stream");
-    }
-
-    const resource = createAudioResource(state.ffmpegProcess.stdout);
-    state.player.play(resource);
-    state.isPlaying = true;
-    state.reconnectAttempts = 0;
-
-    console.log("[Stream] Started playing lofi radio");
-  } catch (error) {
-    console.error("[Stream] Error starting stream:", error);
-    await handleStreamError(state);
-  }
-}
-
-async function handleStreamError(state: GuildAudioState): Promise<void> {
-  if (state.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    console.error("[Stream] Max reconnection attempts reached");
-    state.isPlaying = false;
-    return;
-  }
-
-  state.reconnectAttempts++;
-  console.log(
-    `[Stream] Reconnecting... Attempt ${state.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`
-  );
-
-  await Bun.sleep(RECONNECT_DELAY_MS);
-
-  if (state.isPlaying) {
-    await startStream(state);
-  }
-}
-
-function setupPlayerListeners(state: GuildAudioState, guildId: string): void {
-  state.player.on(AudioPlayerStatus.Idle, async () => {
-    if (state.isPlaying) {
-      console.log("[Player] Stream ended unexpectedly, attempting reconnect");
-      await handleStreamError(state);
-    }
-  });
-
-  state.player.on("error", async (error) => {
-    console.error("[Player] Error:", error.message);
-    if (state.isPlaying) {
-      await handleStreamError(state);
-    }
-  });
-}
-
-function setupConnectionListeners(
-  state: GuildAudioState,
-  guildId: string
-): void {
-  state.connection.on(VoiceConnectionStatus.Disconnected, async () => {
-    try {
-      await Promise.race([
-        entersState(state.connection, VoiceConnectionStatus.Signalling, 5000),
-        entersState(state.connection, VoiceConnectionStatus.Connecting, 5000),
-      ]);
-    } catch {
-      cleanup(guildId);
-    }
-  });
-
-  state.connection.on(VoiceConnectionStatus.Destroyed, () => {
-    cleanup(guildId);
-  });
-}
-
-function cleanup(guildId: string): void {
-  const state = guildStates.get(guildId);
-  if (state) {
-    state.isPlaying = false;
-    if (state.ffmpegProcess) {
-      state.ffmpegProcess.kill();
-    }
-    state.connection.destroy();
-    guildStates.delete(guildId);
-    console.log(`[Cleanup] Cleaned up resources for guild ${guildId}`);
-  }
-}
-
-async function handlePlay(message: Message): Promise<void> {
-  const voiceChannel = message.member?.voice.channel as VoiceBasedChannel | null;
-
-  if (!voiceChannel) {
-    await message.reply("You need to be in a voice channel to use this command!");
-    return;
-  }
-
-  const guildId = message.guildId!;
-  let state = guildStates.get(guildId);
-
-  if (state) {
-    await message.reply("Already playing lofi radio!");
-    return;
-  }
-
-  try {
-    const connection = joinVoiceChannel({
-      channelId: voiceChannel.id,
-      guildId: guildId,
-      adapterCreator: message.guild!.voiceAdapterCreator,
+// Seed default station if none exist
+async function seedDefaultStation(): Promise<void> {
+  const existingStations = await stationService.getAllStations();
+  if (existingStations.length === 0) {
+    console.log("[Seed] No stations found, creating default Lofi station...");
+    await db.insert(stations).values({
+      name: "Lofi Girl",
+      url: "https://play.streamafrica.net/lofiradio",
+      description: "Lofi hip hop radio - beats to relax/study to",
+      isDefault: true,
     });
-
-    await entersState(connection, VoiceConnectionStatus.Ready, 30000);
-
-    const player = createAudioPlayer();
-    connection.subscribe(player);
-
-    state = {
-      connection,
-      player,
-      ffmpegProcess: null,
-      reconnectAttempts: 0,
-      isPlaying: false,
-    };
-
-    guildStates.set(guildId, state);
-    setupPlayerListeners(state, guildId);
-    setupConnectionListeners(state, guildId);
-
-    await startStream(state);
-    await message.reply("Now playing lofi radio! 🎵");
-  } catch (error) {
-    console.error("[Play] Error joining voice channel:", error);
-    cleanup(guildId);
-    await message.reply("Failed to join voice channel. Please try again.");
+    console.log("[Seed] Default station created.");
   }
 }
 
-async function handleStop(message: Message): Promise<void> {
-  const guildId = message.guildId!;
-  const state = guildStates.get(guildId);
-
-  if (!state) {
-    await message.reply("Not currently playing anything!");
-    return;
-  }
-
-  cleanup(guildId);
-  await message.reply("Stopped playing and left the voice channel.");
-}
-
-client.once(Events.ClientReady, (readyClient) => {
+// Event handlers
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`[Bot] Logged in as ${readyClient.user.tag}`);
+  await seedDefaultStation();
 });
 
 client.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot || !message.guild) return;
-
-  const content = message.content.toLowerCase();
-
-  if (content === "!play") {
-    await handlePlay(message);
-  } else if (content === "!stop") {
-    await handleStop(message);
-  }
+  await commandController.handleMessage(message);
 });
 
-const token = process.env.DISCORD_TOKEN;
-if (!token) {
-  console.error("[Bot] DISCORD_TOKEN environment variable is required");
-  process.exit(1);
-}
-
-client.login(token);
-
+// Graceful shutdown
 process.on("SIGINT", () => {
   console.log("[Bot] Shutting down...");
-  for (const guildId of guildStates.keys()) {
-    cleanup(guildId);
-  }
+  audioService.cleanupAll();
   client.destroy();
   process.exit(0);
 });
+
+// Start the bot
+client.login(config.discord.token);

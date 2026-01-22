@@ -1,0 +1,41 @@
+import type { CommandContext, CommandResult } from "@/models/types";
+import type { IStationService } from "@/services/interfaces/IStationService";
+import { MessageView } from "@/views/MessageView";
+import type { ICommand } from "./interfaces/ICommand";
+
+export class SetDefaultCommand implements ICommand {
+  readonly name = "setdefault";
+  readonly description = "Set the default radio station";
+  readonly usage = "!setdefault <id>";
+  readonly adminOnly = true;
+
+  private readonly view = new MessageView();
+
+  constructor(private readonly stationService: IStationService) {}
+
+  async execute(context: CommandContext): Promise<CommandResult> {
+    const { args } = context;
+
+    if (args.length < 1) {
+      return { success: false, message: this.view.invalidUsage(this.usage) };
+    }
+
+    const id = parseInt(args[0], 10);
+    if (isNaN(id)) {
+      return { success: false, message: this.view.invalidUsage(this.usage) };
+    }
+
+    const station = await this.stationService.getStationById(id);
+    if (!station) {
+      return { success: false, message: this.view.stationNotFoundById(id) };
+    }
+
+    try {
+      await this.stationService.setDefaultStation(id);
+      return { success: true, message: this.view.stationSetDefault(station) };
+    } catch (error) {
+      console.error("[SetDefaultCommand] Error:", error);
+      return { success: false, message: "Failed to set default station. Please try again." };
+    }
+  }
+}
