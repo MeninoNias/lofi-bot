@@ -7,6 +7,7 @@ import {
   joinVoiceChannel,
 } from "@discordjs/voice";
 import type { VoiceBasedChannel } from "discord.js";
+import { Readable } from "node:stream";
 import { config } from "@/config";
 import type { GuildAudioState } from "@/models/types";
 import type { IAudioService } from "./interfaces/IAudioService";
@@ -72,11 +73,12 @@ export class AudioService implements IAudioService {
 
       state.ffmpegProcess = this.streamService.createStream(streamUrl);
 
-      if (!state.ffmpegProcess.stdout) {
+      if (!state.ffmpegProcess.stdout || typeof state.ffmpegProcess.stdout === "number") {
         throw new Error("Failed to create ffmpeg stdout stream");
       }
 
-      const resource = createAudioResource(state.ffmpegProcess.stdout);
+      const nodeStream = Readable.fromWeb(state.ffmpegProcess.stdout as import("stream/web").ReadableStream);
+      const resource = createAudioResource(nodeStream);
       state.player.play(resource);
       state.isPlaying = true;
       state.reconnectAttempts = 0;

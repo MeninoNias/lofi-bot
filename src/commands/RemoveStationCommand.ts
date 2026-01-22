@@ -20,7 +20,7 @@ export class RemoveStationCommand implements ICommand {
       return { success: false, message: this.view.invalidUsage(this.usage) };
     }
 
-    const id = parseInt(args[0], 10);
+    const id = parseInt(args[0]!, 10);
     if (isNaN(id)) {
       return { success: false, message: this.view.invalidUsage(this.usage) };
     }

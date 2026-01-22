@@ -20,8 +20,8 @@ export class AddStationCommand implements ICommand {
       return { success: false, message: this.view.invalidUsage(this.usage) };
     }
 
-    const name = args[0];
-    const url = args[1];
+    const name = args[0]!;
+    const url = args[1]!;
     const description = args.slice(2).join(" ") || undefined;
 
     // Check if station with same name already exists

@@ -25,7 +25,8 @@ export class CommandController {
     if (!content.startsWith(this.prefix)) return;
 
     const parts = content.slice(this.prefix.length).split(/\s+/);
-    const commandName = parts[0].toLowerCase();
+    const commandName = parts[0]?.toLowerCase();
+    if (!commandName) return;
     const args = parts.slice(1);
 
     const command = this.commands.get(commandName);

@@ -31,7 +31,7 @@ export class StationRepository implements IStationRepository {
 
   async create(station: NewStation): Promise<Station> {
     const result = await this.db.insert(stations).values(station).returning();
-    return result[0];
+    return result[0]!;
   }
 
   async update(id: number, station: Partial<NewStation>): Promise<Station | undefined> {
