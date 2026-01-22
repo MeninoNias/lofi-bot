@@ -14,7 +14,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@discordjs/voice": "^0.18.0",
+    "@discordjs/voice": "^0.19.0",
     "discord.js": "^14.16.3",
     "drizzle-orm": "^0.45.1",
     "ffmpeg-static": "^5.2.0",
