@@ -1,3 +1,9 @@
+// Suppress harmless TimeoutNegativeWarning from @discordjs/voice
+process.on("warning", (warning) => {
+  if (warning.name === "TimeoutNegativeWarning") return;
+  console.warn(warning);
+});
+
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import { config, validateConfig } from "@/config";
 import { db } from "@/database/connection";
@@ -13,6 +19,7 @@ import { AddStationCommand } from "@/commands/AddStationCommand";
 import { RemoveStationCommand } from "@/commands/RemoveStationCommand";
 import { SetDefaultCommand } from "@/commands/SetDefaultCommand";
 import { CommandController } from "@/controllers/CommandController";
+import { botLogger, seedLogger } from "@/utils/logger";
 
 // Validate configuration
 validateConfig();
@@ -48,20 +55,20 @@ commandController.registerCommands([
 async function seedDefaultStation(): Promise<void> {
   const existingStations = await stationService.getAllStations();
   if (existingStations.length === 0) {
-    console.log("[Seed] No stations found, creating default Lofi station...");
+    seedLogger.info("No stations found, creating default Lofi station...");
     await db.insert(stations).values({
       name: "Lofi Girl",
       url: "https://play.streamafrica.net/lofiradio",
       description: "Lofi hip hop radio - beats to relax/study to",
       isDefault: true,
     });
-    console.log("[Seed] Default station created.");
+    seedLogger.info("Default station created");
   }
 }
 
 // Event handlers
 client.once(Events.ClientReady, async (readyClient) => {
-  console.log(`[Bot] Logged in as ${readyClient.user.tag}`);
+  botLogger.info({ tag: readyClient.user.tag }, "Logged in");
   await seedDefaultStation();
 });
 
@@ -71,7 +78,7 @@ client.on(Events.MessageCreate, async (message) => {
 
 // Graceful shutdown
 process.on("SIGINT", () => {
-  console.log("[Bot] Shutting down...");
+  botLogger.info("Shutting down...");
   audioService.cleanupAll();
   client.destroy();
   process.exit(0);

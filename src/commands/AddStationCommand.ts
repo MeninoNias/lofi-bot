@@ -1,5 +1,6 @@
 import type { CommandContext, CommandResult } from "@/models/types";
 import type { IStationService } from "@/services/interfaces/IStationService";
+import { commandLogger } from "@/utils/logger";
 import { MessageView } from "@/views/MessageView";
 import type { ICommand } from "./interfaces/ICommand";
 
@@ -34,7 +35,7 @@ export class AddStationCommand implements ICommand {
       const station = await this.stationService.addStation(name, url, description);
       return { success: true, message: this.view.stationAdded(station) };
     } catch (error) {
-      console.error("[AddStationCommand] Error:", error);
+      commandLogger.error({ command: "addstation", name, url, err: error }, "Failed to add station");
       return { success: false, message: "Failed to add station. Please try again." };
     }
   }

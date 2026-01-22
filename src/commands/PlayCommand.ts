@@ -2,6 +2,7 @@ import type { VoiceBasedChannel } from "discord.js";
 import type { CommandContext, CommandResult } from "@/models/types";
 import type { IAudioService } from "@/services/interfaces/IAudioService";
 import type { IStationService } from "@/services/interfaces/IStationService";
+import { commandLogger } from "@/utils/logger";
 import { MessageView } from "@/views/MessageView";
 import type { ICommand } from "./interfaces/ICommand";
 
@@ -46,7 +47,7 @@ export class PlayCommand implements ICommand {
 
       return { success: true, message: this.view.nowPlaying(station.name) };
     } catch (error) {
-      console.error("[PlayCommand] Error:", error);
+      commandLogger.error({ command: "play", guildId, stationId: station.id, err: error }, "Failed to play station");
       this.audioService.cleanup(guildId);
       return { success: false, message: this.view.failedToJoin() };
     }
