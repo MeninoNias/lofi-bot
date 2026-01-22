@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/MeninoNias/lofi-bot/compare/v2.0.0...v2.1.0) (2026-01-22)
+
+
+### Features
+
+* add Dockerfile and docker-compose.yml for containerized setup ([2fd52d9](https://github.com/MeninoNias/lofi-bot/commit/2fd52d9870741f6cec0a828d5a59b2b858359e70))
+
+
+### Bug Fixes
+
+* resolve TypeScript strict type checking errors ([baf2d92](https://github.com/MeninoNias/lofi-bot/commit/baf2d92cf4b32b1c53bedea920333fff71b9a3f7))
+
 ## [2.0.0](https://github.com/MeninoNias/lofi-bot/compare/v1.0.0...v2.0.0) (2026-01-22)
 
 
