@@ -1,0 +1,28 @@
+services:
+  bot:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DATABASE_URL=postgresql://lofi:lofi@db:5432/lofi_bot
+      - ADMIN_ROLE_ID=${ADMIN_ROLE_ID:-}
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=lofi
+      - POSTGRES_PASSWORD=lofi
+      - POSTGRES_DB=lofi_bot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lofi -d lofi_bot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
