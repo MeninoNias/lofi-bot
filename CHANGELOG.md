@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.4.0](https://github.com/MeninoNias/lofi-bot/compare/v2.3.0...v2.4.0) (2026-01-26)
+
+
+### Features
+
+* add health check endpoint and command ([a16dbee](https://github.com/MeninoNias/lofi-bot/commit/a16dbee9df5bc3401b1d811695fcf845fbfc2021))
+* add health check endpoint and command ([46181bb](https://github.com/MeninoNias/lofi-bot/commit/46181bb854ffbd8cdab3b5e1b17c907289d3e3df)), closes [#11](https://github.com/MeninoNias/lofi-bot/issues/11)
+* auto-stop bot when all users leave voice channel ([65ae925](https://github.com/MeninoNias/lofi-bot/commit/65ae9258f7806f883860432b46e906ecf92bfbc7))
+* auto-stop bot when all users leave voice channel ([a82ef32](https://github.com/MeninoNias/lofi-bot/commit/a82ef3228a7523792ae53e32f7af722ab83883ae)), closes [#13](https://github.com/MeninoNias/lofi-bot/issues/13)
+
+
+### Bug Fixes
+
+* prevent double-destroy error in AudioService cleanup ([5eafc48](https://github.com/MeninoNias/lofi-bot/commit/5eafc48e14874d468e477a092afe4fecabaf088e)), closes [#16](https://github.com/MeninoNias/lofi-bot/issues/16)
+* prevent double-destroy error when using !stop command ([3d14ac4](https://github.com/MeninoNias/lofi-bot/commit/3d14ac43e831027d611bd53e546bc08f50efea80))
+
 ## [2.3.0](https://github.com/MeninoNias/lofi-bot/compare/v2.2.1...v2.3.0) (2026-01-22)
 
 
