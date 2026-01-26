@@ -138,12 +138,14 @@ export class AudioService implements IAudioService {
   cleanup(guildId: string): void {
     const state = this.guildStates.get(guildId);
     if (state) {
+      // Delete first to prevent re-entrant calls from the Destroyed event
+      this.guildStates.delete(guildId);
+
       state.isPlaying = false;
       if (state.ffmpegProcess) {
         state.ffmpegProcess.kill();
       }
       state.connection.destroy();
-      this.guildStates.delete(guildId);
       logger.info({ guildId }, "Cleaned up resources");
     }
   }
