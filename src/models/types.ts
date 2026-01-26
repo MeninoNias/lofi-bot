@@ -9,6 +9,7 @@ export interface GuildAudioState {
   reconnectAttempts: number;
   isPlaying: boolean;
   currentStationId: number | null;
+  channelId: string;
 }
 
 export interface CommandContext {

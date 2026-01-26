@@ -35,7 +35,10 @@ export class SetDefaultCommand implements ICommand {
       await this.stationService.setDefaultStation(id);
       return { success: true, message: this.view.stationSetDefault(station) };
     } catch (error) {
-      commandLogger.error({ command: "setdefault", stationId: id, err: error }, "Failed to set default station");
+      commandLogger.error(
+        { command: "setdefault", stationId: id, err: error },
+        "Failed to set default station"
+      );
       return { success: false, message: "Failed to set default station. Please try again." };
     }
   }

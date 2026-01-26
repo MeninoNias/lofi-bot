@@ -8,11 +8,11 @@ import {
   joinVoiceChannel,
   NoSubscriberBehavior,
 } from "@discordjs/voice";
-import type { VoiceBasedChannel } from "discord.js";
+import type { VoiceBasedChannel, VoiceState } from "discord.js";
 import { Readable } from "node:stream";
 import { config } from "@/config";
 import type { GuildAudioState } from "@/models/types";
-import { streamLogger, playerLogger, logger } from "@/utils/logger";
+import { streamLogger, playerLogger, logger, voiceLogger } from "@/utils/logger";
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { IStreamService } from "./interfaces/IStreamService";
 
@@ -54,6 +54,7 @@ export class AudioService implements IAudioService {
       reconnectAttempts: 0,
       isPlaying: false,
       currentStationId: null,
+      channelId: channel.id,
     };
 
     this.guildStates.set(guildId, state);
@@ -84,7 +85,9 @@ export class AudioService implements IAudioService {
         throw new Error("Failed to create ffmpeg stdout stream");
       }
 
-      const nodeStream = Readable.fromWeb(state.ffmpegProcess.stdout as import("stream/web").ReadableStream);
+      const nodeStream = Readable.fromWeb(
+        state.ffmpegProcess.stdout as import("stream/web").ReadableStream
+      );
       const resource = createAudioResource(nodeStream, {
         inputType: StreamType.OggOpus,
       });
@@ -104,7 +107,10 @@ export class AudioService implements IAudioService {
 
   private async handleStreamError(state: GuildAudioState): Promise<void> {
     if (state.reconnectAttempts >= config.stream.maxReconnectAttempts) {
-      streamLogger.error({ maxAttempts: config.stream.maxReconnectAttempts }, "Max reconnection attempts reached");
+      streamLogger.error(
+        { maxAttempts: config.stream.maxReconnectAttempts },
+        "Max reconnection attempts reached"
+      );
       state.isPlaying = false;
       return;
     }
@@ -138,12 +144,14 @@ export class AudioService implements IAudioService {
   cleanup(guildId: string): void {
     const state = this.guildStates.get(guildId);
     if (state) {
+      // Delete first to prevent re-entrant calls from the Destroyed event
+      this.guildStates.delete(guildId);
+
       state.isPlaying = false;
       if (state.ffmpegProcess) {
         state.ffmpegProcess.kill();
       }
       state.connection.destroy();
-      this.guildStates.delete(guildId);
       logger.info({ guildId }, "Cleaned up resources");
     }
   }
@@ -151,6 +159,30 @@ export class AudioService implements IAudioService {
   cleanupAll(): void {
     for (const guildId of this.guildStates.keys()) {
       this.cleanup(guildId);
+    }
+  }
+
+  handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): void {
+    const guildId = oldState.guild.id;
+    const state = this.guildStates.get(guildId);
+
+    if (!state) return;
+
+    // Check if someone left the bot's channel
+    if (oldState.channelId === state.channelId && oldState.channelId !== newState.channelId) {
+      const channel = oldState.channel;
+      if (!channel) return;
+
+      // Count non-bot members in the channel
+      const humanMembers = channel.members.filter((member) => !member.user.bot).size;
+
+      if (humanMembers === 0) {
+        voiceLogger.info(
+          { guildId, channelId: state.channelId },
+          "All users left voice channel, stopping bot"
+        );
+        this.cleanup(guildId);
+      }
     }
   }
 

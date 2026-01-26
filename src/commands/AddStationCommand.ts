@@ -35,7 +35,10 @@ export class AddStationCommand implements ICommand {
       const station = await this.stationService.addStation(name, url, description);
       return { success: true, message: this.view.stationAdded(station) };
     } catch (error) {
-      commandLogger.error({ command: "addstation", name, url, err: error }, "Failed to add station");
+      commandLogger.error(
+        { command: "addstation", name, url, err: error },
+        "Failed to add station"
+      );
       return { success: false, message: "Failed to add station. Please try again." };
     }
   }
