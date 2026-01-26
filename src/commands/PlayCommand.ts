@@ -47,7 +47,10 @@ export class PlayCommand implements ICommand {
 
       return { success: true, message: this.view.nowPlaying(station.name) };
     } catch (error) {
-      commandLogger.error({ command: "play", guildId, stationId: station.id, err: error }, "Failed to play station");
+      commandLogger.error(
+        { command: "play", guildId, stationId: station.id, err: error },
+        "Failed to play station"
+      );
       this.audioService.cleanup(guildId);
       return { success: false, message: this.view.failedToJoin() };
     }
