@@ -1,4 +1,5 @@
 import type { Station } from "@/database/schema";
+import type { HealthStatus } from "@/services/interfaces/IHealthService";
 
 export class MessageView {
   notInVoiceChannel(): string {
@@ -74,5 +75,34 @@ export class MessageView {
 
   permissionDenied(): string {
     return "You don't have permission to use this command.";
+  }
+
+  healthStatus(status: HealthStatus): string {
+    const emoji = status.status === "healthy" ? "✅" : "❌";
+    const lines = [
+      `${emoji} **Bot Status: ${status.status.toUpperCase()}**`,
+      "",
+      `⏱️ Uptime: ${this.formatUptime(status.uptime)}`,
+      `📡 Discord: ${status.discord.connected ? "Connected" : "Disconnected"} (${status.discord.ping}ms)`,
+      `🏠 Guilds: ${status.discord.guilds}`,
+      `🔊 Active Streams: ${status.audio.activeConnections}`,
+      `🗄️ Database: ${status.database.connected ? "Connected" : "Disconnected"}`,
+    ];
+    return lines.join("\n");
+  }
+
+  private formatUptime(seconds: number): string {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    parts.push(`${secs}s`);
+
+    return parts.join(" ");
   }
 }
