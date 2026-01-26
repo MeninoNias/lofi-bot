@@ -1,4 +1,4 @@
-import type { VoiceBasedChannel } from "discord.js";
+import type { VoiceBasedChannel, VoiceState } from "discord.js";
 import type { GuildAudioState } from "@/models/types";
 
 export interface IAudioService {
@@ -9,4 +9,5 @@ export interface IAudioService {
   stopStream(guildId: string): void;
   cleanup(guildId: string): void;
   cleanupAll(): void;
+  handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): void;
 }

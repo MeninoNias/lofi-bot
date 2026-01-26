@@ -76,6 +76,10 @@ client.on(Events.MessageCreate, async (message) => {
   await commandController.handleMessage(message);
 });
 
+client.on(Events.VoiceStateUpdate, (oldState, newState) => {
+  audioService.handleVoiceStateUpdate(oldState, newState);
+});
+
 // Graceful shutdown
 process.on("SIGINT", () => {
   botLogger.info("Shutting down...");

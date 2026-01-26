@@ -35,7 +35,10 @@ export class RemoveStationCommand implements ICommand {
       await this.stationService.removeStation(id);
       return { success: true, message: this.view.stationRemoved(id) };
     } catch (error) {
-      commandLogger.error({ command: "removestation", stationId: id, err: error }, "Failed to remove station");
+      commandLogger.error(
+        { command: "removestation", stationId: id, err: error },
+        "Failed to remove station"
+      );
       return { success: false, message: "Failed to remove station. Please try again." };
     }
   }
