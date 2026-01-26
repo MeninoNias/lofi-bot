@@ -12,6 +12,10 @@ export const config = {
     reconnectDelayMs: 5000,
     maxReconnectAttempts: 5,
   },
+  api: {
+    port: parseInt(process.env.API_PORT || "3000", 10),
+    enabled: process.env.API_ENABLED !== "false",
+  },
 } as const;
 
 export function validateConfig(): void {

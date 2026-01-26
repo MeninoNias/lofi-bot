@@ -18,7 +18,10 @@ import { StationsCommand } from "@/commands/StationsCommand";
 import { AddStationCommand } from "@/commands/AddStationCommand";
 import { RemoveStationCommand } from "@/commands/RemoveStationCommand";
 import { SetDefaultCommand } from "@/commands/SetDefaultCommand";
+import { HealthCommand } from "@/commands/HealthCommand";
 import { CommandController } from "@/controllers/CommandController";
+import { HealthService } from "@/services/HealthService";
+import { HealthServer } from "@/services/HealthServer";
 import { botLogger, seedLogger } from "@/utils/logger";
 
 // Validate configuration
@@ -39,6 +42,8 @@ const stationRepository = new StationRepository(db);
 const stationService = new StationService(stationRepository);
 const streamService = new StreamService();
 const audioService = new AudioService(streamService);
+const healthService = new HealthService(client, db, audioService);
+const healthServer = config.api.enabled ? new HealthServer(healthService, config.api.port) : null;
 
 // Initialize controller and register commands
 const commandController = new CommandController();
@@ -49,6 +54,7 @@ commandController.registerCommands([
   new AddStationCommand(stationService),
   new RemoveStationCommand(stationService),
   new SetDefaultCommand(stationService),
+  new HealthCommand(healthService),
 ]);
 
 // Seed default station if none exist
@@ -70,6 +76,7 @@ async function seedDefaultStation(): Promise<void> {
 client.once(Events.ClientReady, async (readyClient) => {
   botLogger.info({ tag: readyClient.user.tag }, "Logged in");
   await seedDefaultStation();
+  healthServer?.start();
 });
 
 client.on(Events.MessageCreate, async (message) => {
@@ -83,6 +90,7 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
 // Graceful shutdown
 process.on("SIGINT", () => {
   botLogger.info("Shutting down...");
+  healthServer?.stop();
   audioService.cleanupAll();
   client.destroy();
   process.exit(0);

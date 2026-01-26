@@ -24,3 +24,4 @@ export const configLogger = logger.child({ module: "Config" });
 export const commandLogger = logger.child({ module: "Command" });
 export const seedLogger = logger.child({ module: "Seed" });
 export const voiceLogger = logger.child({ module: "Voice" });
+export const healthLogger = logger.child({ module: "Health" });

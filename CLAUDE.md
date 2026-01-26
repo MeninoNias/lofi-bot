@@ -28,6 +28,8 @@ Copy `.env.example` to `.env` and configure:
 - `DATABASE_URL` - PostgreSQL connection string
 - `ADMIN_ROLE_ID` - (Optional) Role ID for admin commands
 - `LOG_LEVEL` - (Optional) Logging level: `debug`, `info`, `warn`, `error` (default: `info`)
+- `API_PORT` - (Optional) Port for HTTP API endpoint (default: `3000`)
+- `API_ENABLED` - (Optional) Enable/disable HTTP API (default: `true`)
 
 ## Architecture
 
@@ -63,6 +65,8 @@ src/
 - `AudioService`: Manages voice connections and audio playback with automatic reconnection
 - `StreamService`: Creates FFmpeg processes for audio streaming
 - `StationService`: CRUD operations for radio stations with ID/name/default resolution
+- `HealthService`: Provides health status (Discord, database, audio connections)
+- `HealthServer`: Elysia.js HTTP server for health check endpoint
 - `CommandController`: Routes commands to handlers with error handling
 - `StationRepository`: Database access for stations table
 - `MessageView`: Consistent response formatting for all bot messages
@@ -70,7 +74,7 @@ src/
 ### Logging
 
 Uses pino for structured logging with child loggers per module:
-- `streamLogger`, `playerLogger`, `botLogger`, `configLogger`, `commandLogger`, `seedLogger`, `voiceLogger`
+- `streamLogger`, `playerLogger`, `botLogger`, `configLogger`, `commandLogger`, `seedLogger`, `voiceLogger`, `healthLogger`
 - Pretty-printing in development, JSON in production
 - Configured via `LOG_LEVEL` environment variable
 
@@ -85,8 +89,28 @@ Uses pino for structured logging with child loggers per module:
 ### Startup Behavior
 
 - Default station seeding on first run (if no stations exist)
+- Health check HTTP server starts after Discord login (if enabled)
 - Graceful shutdown handler registered for SIGINT
 - Suppresses TimeoutNegativeWarning from @discordjs/voice
+
+### Health Check API
+
+HTTP endpoint powered by Elysia.js for external monitoring (Kubernetes, Docker, etc.):
+
+- `GET /` - API info
+- `GET /health` - Health status (200 OK or 503 Service Unavailable)
+
+Response format:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "uptime": 3600,
+  "discord": { "connected": true, "ping": 45, "guilds": 5 },
+  "database": { "connected": true },
+  "audio": { "activeConnections": 2 }
+}
+```
 
 ### Permissions
 
@@ -103,6 +127,7 @@ Falls back to Administrator check if no role ID configured.
 | `!play [station]` | Play station (default if omitted) | Everyone |
 | `!stop` | Stop streaming and leave channel | Everyone |
 | `!stations` | List all available stations | Everyone |
+| `!health` | Check bot health status | Everyone |
 | `!addstation <name> <url> [desc]` | Add new station | Admin |
 | `!removestation <id>` | Remove a station | Admin |
 | `!setdefault <id>` | Set default station | Admin |
@@ -117,7 +142,7 @@ import { something } from "@/utils";
 ### Interfaces
 
 All services and repositories implement interfaces (in `interfaces/` subdirectories):
-- `IAudioService`, `IStreamService`, `IStationService`
+- `IAudioService`, `IStreamService`, `IStationService`, `IHealthService`
 - `IStationRepository`
 - `ICommand` - Commands have `name`, `description`, `usage`, `adminOnly`, and `execute()`
 
