@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.0](https://github.com/MeninoNias/lofi-bot/compare/v2.4.0...v2.5.0) (2026-01-30)
+
+
+### Features
+
+* protect API endpoints with X-API-Key authentication ([841bd66](https://github.com/MeninoNias/lofi-bot/commit/841bd66469f5538286fb2189f94b6615ee1ae159))
+* protect API endpoints with X-API-Key authentication ([3aa0194](https://github.com/MeninoNias/lofi-bot/commit/3aa01941889a116bfdbe9f9810263bd1b463ce2d)), closes [#21](https://github.com/MeninoNias/lofi-bot/issues/21)
+
 ## [2.4.0](https://github.com/MeninoNias/lofi-bot/compare/v2.3.0...v2.4.0) (2026-01-26)
 
 
