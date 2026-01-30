@@ -9,9 +9,12 @@ import { config, validateConfig } from "@/config";
 import { db } from "@/database/connection";
 import { stations } from "@/database/schema";
 import { StationRepository } from "@/repositories/StationRepository";
+import { UserProfileRepository } from "@/repositories/UserProfileRepository";
+import { GuildUserStatsRepository } from "@/repositories/GuildUserStatsRepository";
 import { AudioService } from "@/services/AudioService";
 import { StationService } from "@/services/StationService";
 import { StreamService } from "@/services/StreamService";
+import { ProfileService } from "@/services/ProfileService";
 import { PlayCommand } from "@/commands/PlayCommand";
 import { StopCommand } from "@/commands/StopCommand";
 import { StationsCommand } from "@/commands/StationsCommand";
@@ -39,14 +42,17 @@ const client = new Client({
 
 // Dependency Injection - Build the object graph
 const stationRepository = new StationRepository(db);
+const userProfileRepository = new UserProfileRepository(db);
+const guildUserStatsRepository = new GuildUserStatsRepository(db);
 const stationService = new StationService(stationRepository);
 const streamService = new StreamService();
 const audioService = new AudioService(streamService);
+const profileService = new ProfileService(userProfileRepository, guildUserStatsRepository);
 const healthService = new HealthService(client, db, audioService);
 const healthServer = config.api.enabled ? new HealthServer(healthService, config.api.port) : null;
 
 // Initialize controller and register commands
-const commandController = new CommandController();
+const commandController = new CommandController(profileService);
 commandController.registerCommands([
   new PlayCommand(audioService, stationService),
   new StopCommand(audioService),
