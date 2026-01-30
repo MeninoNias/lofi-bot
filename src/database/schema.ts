@@ -1,4 +1,4 @@
-import { boolean, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const stations = pgTable("stations", {
   id: serial("id").primaryKey(),
@@ -12,3 +12,29 @@ export const stations = pgTable("stations", {
 
 export type Station = typeof stations.$inferSelect;
 export type NewStation = typeof stations.$inferInsert;
+
+export const userProfiles = pgTable("user_profiles", {
+  userId: varchar("user_id", { length: 255 }).primaryKey(),
+  totalMinutesListened: integer("total_minutes_listened").default(0).notNull(),
+  currentLevel: integer("current_level").default(1).notNull(),
+  totalXp: integer("total_xp").default(0).notNull(),
+  lastActive: timestamp("last_active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type NewUserProfile = typeof userProfiles.$inferInsert;
+
+export const guildUserStats = pgTable("guild_user_stats", {
+  id: serial("id").primaryKey(),
+  guildId: varchar("guild_id", { length: 255 }).notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  minutesListened: integer("minutes_listened").default(0).notNull(),
+  xp: integer("xp").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type GuildUserStats = typeof guildUserStats.$inferSelect;
+export type NewGuildUserStats = typeof guildUserStats.$inferInsert;

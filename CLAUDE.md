@@ -30,6 +30,7 @@ Copy `.env.example` to `.env` and configure:
 - `LOG_LEVEL` - (Optional) Logging level: `debug`, `info`, `warn`, `error` (default: `info`)
 - `API_PORT` - (Optional) Port for HTTP API endpoint (default: `3000`)
 - `API_ENABLED` - (Optional) Enable/disable HTTP API (default: `true`)
+- `API_KEY` - (Optional) API key for authenticating HTTP API requests. If set, all API endpoints require `X-API-Key` header
 
 ## Architecture
 
@@ -100,6 +101,19 @@ HTTP endpoint powered by Elysia.js for external monitoring (Kubernetes, Docker, 
 - `GET /` - API info
 - `GET /health` - Health status (200 OK or 503 Service Unavailable)
 
+#### Authentication
+
+If `API_KEY` is configured, all endpoints require the `X-API-Key` header:
+```bash
+curl -H "X-API-Key: your-api-key" http://localhost:3000/health
+```
+
+Responses:
+- `401 Unauthorized` - Missing `X-API-Key` header
+- `403 Forbidden` - Invalid API key
+
+If `API_KEY` is not set, endpoints are publicly accessible (no authentication required).
+
 Response format:
 ```json
 {
@@ -143,17 +157,33 @@ import { something } from "@/utils";
 
 All services and repositories implement interfaces (in `interfaces/` subdirectories):
 - `IAudioService`, `IStreamService`, `IStationService`, `IHealthService`
-- `IStationRepository`
+- `IStationRepository`, `IUserProfileRepository`, `IGuildUserStatsRepository`
 - `ICommand` - Commands have `name`, `description`, `usage`, `adminOnly`, and `execute()`
 
 ### Database Schema
 
-Stations table:
+#### Stations table
 - `id`: Serial primary key
 - `name`: Unique station name
 - `url`: Stream URL
 - `description`: Optional description
 - `isDefault`: Boolean for default station
+- `createdAt`, `updatedAt`: Timestamps (auto-managed)
+
+#### User Profiles table (Global user stats)
+- `userId`: Discord User ID (primary key)
+- `totalMinutesListened`: Total listening time across all servers
+- `currentLevel`: Current lofi level
+- `totalXp`: Total XP earned
+- `lastActive`: Last activity timestamp
+- `createdAt`, `updatedAt`: Timestamps (auto-managed)
+
+#### Guild User Stats table (Per-server user stats)
+- `id`: Serial primary key
+- `guildId`: Discord Guild ID
+- `userId`: Discord User ID
+- `minutesListened`: Listening time in this server
+- `xp`: XP earned in this server
 - `createdAt`, `updatedAt`: Timestamps (auto-managed)
 
 ## Release Process
