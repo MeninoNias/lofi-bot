@@ -30,6 +30,7 @@ Copy `.env.example` to `.env` and configure:
 - `LOG_LEVEL` - (Optional) Logging level: `debug`, `info`, `warn`, `error` (default: `info`)
 - `API_PORT` - (Optional) Port for HTTP API endpoint (default: `3000`)
 - `API_ENABLED` - (Optional) Enable/disable HTTP API (default: `true`)
+- `API_KEY` - (Optional) API key for authenticating HTTP API requests. If set, all API endpoints require `X-API-Key` header
 
 ## Architecture
 
@@ -99,6 +100,19 @@ HTTP endpoint powered by Elysia.js for external monitoring (Kubernetes, Docker, 
 
 - `GET /` - API info
 - `GET /health` - Health status (200 OK or 503 Service Unavailable)
+
+#### Authentication
+
+If `API_KEY` is configured, all endpoints require the `X-API-Key` header:
+```bash
+curl -H "X-API-Key: your-api-key" http://localhost:3000/health
+```
+
+Responses:
+- `401 Unauthorized` - Missing `X-API-Key` header
+- `403 Forbidden` - Invalid API key
+
+If `API_KEY` is not set, endpoints are publicly accessible (no authentication required).
 
 Response format:
 ```json
