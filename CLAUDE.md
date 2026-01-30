@@ -66,16 +66,20 @@ src/
 - `AudioService`: Manages voice connections and audio playback with automatic reconnection
 - `StreamService`: Creates FFmpeg processes for audio streaming
 - `StationService`: CRUD operations for radio stations with ID/name/default resolution
+- `ProfileService`: XP tracking, level calculations, and user profile management
 - `HealthService`: Provides health status (Discord, database, audio connections)
 - `HealthServer`: Elysia.js HTTP server for health check endpoint
-- `CommandController`: Routes commands to handlers with error handling
+- `CommandController`: Routes commands to handlers with error handling and XP rewards
 - `StationRepository`: Database access for stations table
-- `MessageView`: Consistent response formatting for all bot messages
+- `UserProfileRepository`: Database access for user profiles
+- `GuildRepository`: Database access for guild info
+- `GuildUserStatsRepository`: Database access for per-server user stats
+- `MessageView`: Consistent response formatting for all bot messages and level helpers
 
 ### Logging
 
 Uses pino for structured logging with child loggers per module:
-- `streamLogger`, `playerLogger`, `botLogger`, `configLogger`, `commandLogger`, `seedLogger`, `voiceLogger`, `healthLogger`
+- `streamLogger`, `playerLogger`, `botLogger`, `configLogger`, `commandLogger`, `seedLogger`, `voiceLogger`, `healthLogger`, `profileLogger`
 - Pretty-printing in development, JSON in production
 - Configured via `LOG_LEVEL` environment variable
 
@@ -114,7 +118,7 @@ Responses:
 
 If `API_KEY` is not set, endpoints are publicly accessible (no authentication required).
 
-Response format:
+#### Response format
 ```json
 {
   "status": "healthy",
@@ -125,6 +129,37 @@ Response format:
   "audio": { "activeConnections": 2 }
 }
 ```
+
+### XP & Leveling System (Lofi Levels)
+
+Users earn XP for interacting with the bot, tracked globally and per-server.
+
+#### XP Calculation
+- **10 XP per minute** of interaction
+- Level thresholds use exponential curve: `100 * 1.5^(level-1)`
+  - Level 1: 100 XP
+  - Level 5: 506 XP
+  - Level 10: 3,844 XP
+  - Level 25: 162,754 XP
+
+#### Level Titles
+| Level | Title | Emoji |
+|-------|-------|-------|
+| 1-4 | Newcomer | 🎧 |
+| 5-9 | Regular | 🎵 |
+| 10-24 | Dedicated Listener | 🎼 |
+| 25-49 | Lofi Addict | 🎹 |
+| 50+ | Lofi Legend | 👑 |
+
+#### Badges (earned at milestones)
+- Level 1: "First Steps"
+- Level 5: "Getting Started"
+- Level 10: "Dedicated"
+- Level 25: "Committed"
+- Level 50: "Legendary"
+
+#### Level-Up Notifications
+When users level up, a notification is sent to the channel with their new level, title unlock (at milestones), and badge earned.
 
 ### Permissions
 
@@ -159,7 +194,7 @@ import { something } from "@/utils";
 ### Interfaces
 
 All services and repositories implement interfaces (in `interfaces/` subdirectories):
-- `IAudioService`, `IStreamService`, `IStationService`, `IHealthService`
+- `IAudioService`, `IStreamService`, `IStationService`, `IHealthService`, `IProfileService`
 - `IStationRepository`, `IUserProfileRepository`, `IGuildUserStatsRepository`, `IGuildRepository`
 - `ICommand` - Commands have `name`, `description`, `usage`, `adminOnly`, and `execute()`
 
