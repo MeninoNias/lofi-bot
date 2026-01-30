@@ -142,6 +142,9 @@ Falls back to Administrator check if no role ID configured.
 | `!stop` | Stop streaming and leave channel | Everyone |
 | `!stations` | List all available stations | Everyone |
 | `!health` | Check bot health status | Everyone |
+| `!profile` | View your lofi profile (level, XP, rank) | Everyone |
+| `!rank` | View server leaderboard | Everyone |
+| `!globalrank` | View global leaderboard | Everyone |
 | `!addstation <name> <url> [desc]` | Add new station | Admin |
 | `!removestation <id>` | Remove a station | Admin |
 | `!setdefault <id>` | Set default station | Admin |

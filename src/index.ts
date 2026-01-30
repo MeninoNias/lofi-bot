@@ -23,6 +23,9 @@ import { AddStationCommand } from "@/commands/AddStationCommand";
 import { RemoveStationCommand } from "@/commands/RemoveStationCommand";
 import { SetDefaultCommand } from "@/commands/SetDefaultCommand";
 import { HealthCommand } from "@/commands/HealthCommand";
+import { ProfileCommand } from "@/commands/ProfileCommand";
+import { RankCommand } from "@/commands/RankCommand";
+import { GlobalRankCommand } from "@/commands/GlobalRankCommand";
 import { CommandController } from "@/controllers/CommandController";
 import { HealthService } from "@/services/HealthService";
 import { HealthServer } from "@/services/HealthServer";
@@ -67,6 +70,9 @@ commandController.registerCommands([
   new RemoveStationCommand(stationService),
   new SetDefaultCommand(stationService),
   new HealthCommand(healthService),
+  new ProfileCommand(profileService),
+  new RankCommand(profileService, client),
+  new GlobalRankCommand(profileService, client),
 ]);
 
 // Seed default station if none exist
