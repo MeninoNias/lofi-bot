@@ -15,6 +15,7 @@ export const config = {
   api: {
     port: parseInt(process.env.API_PORT || "3000", 10),
     enabled: process.env.API_ENABLED !== "false",
+    key: process.env.API_KEY || "",
   },
 } as const;
 

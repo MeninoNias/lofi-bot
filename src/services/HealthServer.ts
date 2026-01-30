@@ -7,9 +7,24 @@ export class HealthServer {
 
   constructor(
     private readonly healthService: IHealthService,
-    private readonly port: number
+    private readonly port: number,
+    private readonly apiKey?: string
   ) {
-    this.app = new Elysia()
+    this.app = new Elysia();
+
+    if (this.apiKey) {
+      this.app.guard({
+        beforeHandle: ({ headers, set }) => {
+          const providedKey = headers["x-api-key"];
+          if (providedKey !== this.apiKey) {
+            set.status = 401;
+            return { error: "Invalid or missing API key" };
+          }
+        },
+      });
+    }
+
+    this.app
       .get("/", () => ({
         name: "lofi-bot",
         version: "1.0.0",

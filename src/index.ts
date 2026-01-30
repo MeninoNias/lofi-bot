@@ -43,7 +43,9 @@ const stationService = new StationService(stationRepository);
 const streamService = new StreamService();
 const audioService = new AudioService(streamService);
 const healthService = new HealthService(client, db, audioService);
-const healthServer = config.api.enabled ? new HealthServer(healthService, config.api.port) : null;
+const healthServer = config.api.enabled
+  ? new HealthServer(healthService, config.api.port, config.api.key || undefined)
+  : null;
 
 // Initialize controller and register commands
 const commandController = new CommandController();
