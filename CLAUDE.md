@@ -142,6 +142,9 @@ Falls back to Administrator check if no role ID configured.
 | `!stop` | Stop streaming and leave channel | Everyone |
 | `!stations` | List all available stations | Everyone |
 | `!health` | Check bot health status | Everyone |
+| `!profile` | View your lofi profile (level, XP, rank) | Everyone |
+| `!rank` | View server leaderboard | Everyone |
+| `!globalrank` | View global leaderboard | Everyone |
 | `!addstation <name> <url> [desc]` | Add new station | Admin |
 | `!removestation <id>` | Remove a station | Admin |
 | `!setdefault <id>` | Set default station | Admin |
@@ -157,17 +160,45 @@ import { something } from "@/utils";
 
 All services and repositories implement interfaces (in `interfaces/` subdirectories):
 - `IAudioService`, `IStreamService`, `IStationService`, `IHealthService`
-- `IStationRepository`
+- `IStationRepository`, `IUserProfileRepository`, `IGuildUserStatsRepository`, `IGuildRepository`
 - `ICommand` - Commands have `name`, `description`, `usage`, `adminOnly`, and `execute()`
 
 ### Database Schema
 
-Stations table:
+#### Stations table
 - `id`: Serial primary key
 - `name`: Unique station name
 - `url`: Stream URL
 - `description`: Optional description
 - `isDefault`: Boolean for default station
+- `createdAt`, `updatedAt`: Timestamps (auto-managed)
+
+#### User Profiles table (Global user stats)
+- `userId`: Discord User ID (primary key)
+- `username`: Discord username
+- `displayName`: Discord display name
+- `avatarUrl`: Discord avatar URL
+- `totalMinutesListened`: Total listening time across all servers
+- `currentLevel`: Current lofi level
+- `totalXp`: Total XP earned
+- `lastActive`: Last activity timestamp
+- `createdAt`, `updatedAt`: Timestamps (auto-managed)
+
+#### Guilds table (Discord server info)
+- `guildId`: Discord Guild ID (primary key)
+- `name`: Server name
+- `iconUrl`: Server icon URL
+- `memberCount`: Number of members
+- `ownerId`: Discord User ID of the owner
+- `createdAt`, `updatedAt`: Timestamps (auto-managed)
+
+#### Guild User Stats table (Per-server user stats)
+- `id`: Serial primary key
+- `guildId`: Discord Guild ID
+- `userId`: Discord User ID
+- `nickname`: User's nickname in this server
+- `minutesListened`: Listening time in this server
+- `xp`: XP earned in this server
 - `createdAt`, `updatedAt`: Timestamps (auto-managed)
 
 ## Release Process
