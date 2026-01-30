@@ -1,6 +1,7 @@
 import type { Client } from "discord.js";
 import type { CommandContext, CommandResult } from "@/models/types";
 import type { IProfileService } from "@/services/interfaces/IProfileService";
+import { MessageView } from "@/views/MessageView";
 import type { ICommand } from "./interfaces/ICommand";
 
 export class GlobalRankCommand implements ICommand {
@@ -8,6 +9,8 @@ export class GlobalRankCommand implements ICommand {
   readonly description = "View global leaderboard";
   readonly usage = "!globalrank";
   readonly adminOnly = false;
+
+  private readonly view = new MessageView();
 
   constructor(
     private readonly profileService: IProfileService,
@@ -30,11 +33,9 @@ export class GlobalRankCommand implements ICommand {
 
     for (let i = 0; i < topProfiles.length; i++) {
       const profile = topProfiles[i];
-      const medal = this.getMedal(i);
-      const hours = Math.floor(profile.totalMinutesListened / 60);
-      const mins = profile.totalMinutesListened % 60;
-      const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-      const title = this.getLevelTitle(profile.currentLevel);
+      const medal = this.view.getMedalEmoji(i);
+      const timeStr = this.view.formatTime(profile.totalMinutesListened);
+      const titleEmoji = this.view.getLevelEmoji(profile.currentLevel);
 
       // Try to get username
       let username = profile.displayName || profile.username;
@@ -47,7 +48,9 @@ export class GlobalRankCommand implements ICommand {
         }
       }
 
-      lines.push(`${medal} **${username}** ${title} - Level ${profile.currentLevel} (${timeStr})`);
+      lines.push(
+        `${medal} **${username}** ${titleEmoji} - Level ${profile.currentLevel} (${timeStr})`
+      );
     }
 
     // Find current user's rank
@@ -65,26 +68,5 @@ export class GlobalRankCommand implements ICommand {
     }
 
     return { success: true, message: lines.join("\n") };
-  }
-
-  private getMedal(index: number): string {
-    switch (index) {
-      case 0:
-        return "👑";
-      case 1:
-        return "🥈";
-      case 2:
-        return "🥉";
-      default:
-        return `${index + 1}.`;
-    }
-  }
-
-  private getLevelTitle(level: number): string {
-    if (level >= 50) return "👑";
-    if (level >= 25) return "🎹";
-    if (level >= 10) return "🎼";
-    if (level >= 5) return "🎵";
-    return "🎧";
   }
 }

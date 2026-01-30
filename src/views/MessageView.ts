@@ -105,4 +105,83 @@ export class MessageView {
 
     return parts.join(" ");
   }
+
+  // Level system helpers
+  getLevelTitle(level: number): { name: string; emoji: string } {
+    if (level >= 50) return { name: "Lofi Legend", emoji: "👑" };
+    if (level >= 25) return { name: "Lofi Addict", emoji: "🎹" };
+    if (level >= 10) return { name: "Dedicated Listener", emoji: "🎼" };
+    if (level >= 5) return { name: "Regular", emoji: "🎵" };
+    return { name: "Newcomer", emoji: "🎧" };
+  }
+
+  getLevelTitleFormatted(level: number): string {
+    const title = this.getLevelTitle(level);
+    return `${title.emoji} **${title.name}**`;
+  }
+
+  getLevelEmoji(level: number): string {
+    return this.getLevelTitle(level).emoji;
+  }
+
+  formatTime(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  }
+
+  createProgressBar(progress: number, length: number = 10): string {
+    const filled = Math.round(progress * length);
+    const empty = length - filled;
+    return "█".repeat(filled) + "░".repeat(empty);
+  }
+
+  getMedalEmoji(rank: number): string {
+    switch (rank) {
+      case 0:
+        return "👑";
+      case 1:
+        return "🥈";
+      case 2:
+        return "🥉";
+      default:
+        return `${rank + 1}.`;
+    }
+  }
+
+  getNewBadge(level: number): string | null {
+    switch (level) {
+      case 1:
+        return "First Steps";
+      case 5:
+        return "Getting Started";
+      case 10:
+        return "Dedicated";
+      case 25:
+        return "Committed";
+      case 50:
+        return "Legendary";
+      default:
+        return null;
+    }
+  }
+
+  levelUpNotification(username: string, newLevel: number): string {
+    const title = this.getLevelTitle(newLevel);
+    const badge = this.getNewBadge(newLevel);
+    const isMilestone = [5, 10, 25, 50].includes(newLevel);
+
+    let notification = `🎉 **Level Up!** ${username} reached **Level ${newLevel}**!`;
+    if (isMilestone) {
+      notification += `\n${title.emoji} "${title.name}" title unlocked!`;
+    }
+    if (badge) {
+      notification += `\n🏅 "${badge}" badge earned!`;
+    }
+
+    return notification;
+  }
 }

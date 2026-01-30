@@ -114,53 +114,12 @@ export class CommandController {
   }
 
   private async sendLevelUpNotification(message: Message, newLevel: number): Promise<void> {
-    const title = this.getLevelTitle(newLevel);
-    const badge = this.getNewBadge(newLevel);
-
-    let notification = `🎉 **Level Up!** ${message.author} reached **Level ${newLevel}**!`;
-    if (title) {
-      notification += `\n${title.emoji} "${title.name}" title unlocked!`;
-    }
-    if (badge) {
-      notification += `\n🏅 "${badge}" badge earned!`;
-    }
+    const notification = this.view.levelUpNotification(message.author.toString(), newLevel);
 
     try {
       await message.channel.send(notification);
     } catch (error) {
       profileLogger.error({ err: error }, "Failed to send level up notification");
-    }
-  }
-
-  private getLevelTitle(level: number): { name: string; emoji: string } | null {
-    switch (level) {
-      case 5:
-        return { name: "Regular", emoji: "🎵" };
-      case 10:
-        return { name: "Dedicated Listener", emoji: "🎼" };
-      case 25:
-        return { name: "Lofi Addict", emoji: "🎹" };
-      case 50:
-        return { name: "Lofi Legend", emoji: "👑" };
-      default:
-        return null;
-    }
-  }
-
-  private getNewBadge(level: number): string | null {
-    switch (level) {
-      case 1:
-        return "First Steps";
-      case 5:
-        return "Getting Started";
-      case 10:
-        return "Dedicated";
-      case 25:
-        return "Committed";
-      case 50:
-        return "Legendary";
-      default:
-        return null;
     }
   }
 }

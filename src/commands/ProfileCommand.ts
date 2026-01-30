@@ -1,5 +1,6 @@
 import type { CommandContext, CommandResult } from "@/models/types";
 import type { IProfileService } from "@/services/interfaces/IProfileService";
+import { MessageView } from "@/views/MessageView";
 import type { ICommand } from "./interfaces/ICommand";
 
 export class ProfileCommand implements ICommand {
@@ -7,6 +8,8 @@ export class ProfileCommand implements ICommand {
   readonly description = "View your lofi profile";
   readonly usage = "!profile";
   readonly adminOnly = false;
+
+  private readonly view = new MessageView();
 
   constructor(private readonly profileService: IProfileService) {}
 
@@ -26,8 +29,8 @@ export class ProfileCommand implements ICommand {
     }
 
     const levelInfo = this.profileService.getLevelInfo(profile.totalXp);
-    const progressBar = this.createProgressBar(levelInfo.progress);
-    const title = this.getLevelTitle(profile.currentLevel);
+    const progressBar = this.view.createProgressBar(levelInfo.progress);
+    const title = this.view.getLevelTitleFormatted(profile.currentLevel);
 
     // Get guild stats if in a guild
     let guildRankText = "";
@@ -48,7 +51,7 @@ export class ProfileCommand implements ICommand {
     const globalRankText = globalRank > 0 ? `\n🌍 Global Rank: #${globalRank}` : "";
 
     const displayName = profile.displayName || profile.username || message.author.displayName;
-    const totalTime = this.formatTime(profile.totalMinutesListened);
+    const totalTime = this.view.formatTime(profile.totalMinutesListened);
 
     const lines = [
       `🎧 **Lofi Profile: ${displayName}**`,
@@ -64,28 +67,5 @@ export class ProfileCommand implements ICommand {
     ];
 
     return { success: true, message: lines.filter((l) => l !== "").join("\n") };
-  }
-
-  private createProgressBar(progress: number): string {
-    const filled = Math.round(progress * 10);
-    const empty = 10 - filled;
-    return "█".repeat(filled) + "░".repeat(empty);
-  }
-
-  private formatTime(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  }
-
-  private getLevelTitle(level: number): string {
-    if (level >= 50) return "👑 **Lofi Legend**";
-    if (level >= 25) return "🎹 **Lofi Addict**";
-    if (level >= 10) return "🎼 **Dedicated Listener**";
-    if (level >= 5) return "🎵 **Regular**";
-    return "🎧 **Newcomer**";
   }
 }

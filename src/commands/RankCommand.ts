@@ -1,6 +1,7 @@
 import type { Client } from "discord.js";
 import type { CommandContext, CommandResult } from "@/models/types";
 import type { IProfileService } from "@/services/interfaces/IProfileService";
+import { MessageView } from "@/views/MessageView";
 import type { ICommand } from "./interfaces/ICommand";
 
 export class RankCommand implements ICommand {
@@ -8,6 +9,8 @@ export class RankCommand implements ICommand {
   readonly description = "View server leaderboard";
   readonly usage = "!rank";
   readonly adminOnly = false;
+
+  private readonly view = new MessageView();
 
   constructor(
     private readonly profileService: IProfileService,
@@ -36,12 +39,10 @@ export class RankCommand implements ICommand {
 
     for (let i = 0; i < topStats.length; i++) {
       const stats = topStats[i];
-      const medal = this.getMedal(i);
+      const medal = this.view.getMedalEmoji(i);
       const profile = await this.profileService.getProfile(stats.userId);
       const level = profile?.currentLevel || 1;
-      const hours = Math.floor(stats.minutesListened / 60);
-      const mins = stats.minutesListened % 60;
-      const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+      const timeStr = this.view.formatTime(stats.minutesListened);
 
       // Try to get username
       let username = stats.nickname || profile?.displayName || profile?.username;
@@ -68,18 +69,5 @@ export class RankCommand implements ICommand {
     }
 
     return { success: true, message: lines.join("\n") };
-  }
-
-  private getMedal(index: number): string {
-    switch (index) {
-      case 0:
-        return "👑";
-      case 1:
-        return "🥈";
-      case 2:
-        return "🥉";
-      default:
-        return `${index + 1}.`;
-    }
   }
 }
