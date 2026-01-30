@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.6.0](https://github.com/MeninoNias/lofi-bot/compare/v2.5.0...v2.6.0) (2026-01-30)
+
+
+### Features
+
+* add profile, rank, and globalrank commands with level-up notifications ([9673d9a](https://github.com/MeninoNias/lofi-bot/commit/9673d9ae48421d6a0b801d0a00d1f08c6467ba4d))
+* add ProfileService for XP tracking on bot interactions ([b98e81b](https://github.com/MeninoNias/lofi-bot/commit/b98e81bb35d9dba2d125e95f73450415bf51de18))
+* add user profile and guild user stats models ([fc39165](https://github.com/MeninoNias/lofi-bot/commit/fc39165271723a217b75e13e728c613532ebe914))
+* add user profile and guild user stats models ([81f41bf](https://github.com/MeninoNias/lofi-bot/commit/81f41bfe01893369d5919c26136d63c9594ee947)), closes [#25](https://github.com/MeninoNias/lofi-bot/issues/25)
+* store Discord user and guild info in database ([6f8e84e](https://github.com/MeninoNias/lofi-bot/commit/6f8e84e3be6d59a180a217c32e92368f5b378307))
+
 ## [2.5.0](https://github.com/MeninoNias/lofi-bot/compare/v2.4.0...v2.5.0) (2026-01-30)
 
 
