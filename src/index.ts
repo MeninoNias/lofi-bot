@@ -11,6 +11,7 @@ import { stations } from "@/database/schema";
 import { StationRepository } from "@/repositories/StationRepository";
 import { UserProfileRepository } from "@/repositories/UserProfileRepository";
 import { GuildUserStatsRepository } from "@/repositories/GuildUserStatsRepository";
+import { GuildRepository } from "@/repositories/GuildRepository";
 import { AudioService } from "@/services/AudioService";
 import { StationService } from "@/services/StationService";
 import { StreamService } from "@/services/StreamService";
@@ -44,10 +45,15 @@ const client = new Client({
 const stationRepository = new StationRepository(db);
 const userProfileRepository = new UserProfileRepository(db);
 const guildUserStatsRepository = new GuildUserStatsRepository(db);
+const guildRepository = new GuildRepository(db);
 const stationService = new StationService(stationRepository);
 const streamService = new StreamService();
 const audioService = new AudioService(streamService);
-const profileService = new ProfileService(userProfileRepository, guildUserStatsRepository);
+const profileService = new ProfileService(
+  userProfileRepository,
+  guildUserStatsRepository,
+  guildRepository
+);
 const healthService = new HealthService(client, db, audioService);
 const healthServer = config.api.enabled ? new HealthServer(healthService, config.api.port) : null;
 

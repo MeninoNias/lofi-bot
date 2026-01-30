@@ -1,24 +1,43 @@
-import type { GuildUserStats, UserProfile } from "@/database/schema";
+import type { Guild, GuildUserStats, UserProfile } from "@/database/schema";
 import type { IUserProfileRepository } from "@/repositories/interfaces/IUserProfileRepository";
 import type { IGuildUserStatsRepository } from "@/repositories/interfaces/IGuildUserStatsRepository";
-import type { IProfileService, LevelInfo } from "./interfaces/IProfileService";
+import type { IGuildRepository } from "@/repositories/interfaces/IGuildRepository";
+import type {
+  DiscordGuildData,
+  DiscordMemberData,
+  DiscordUserData,
+  IProfileService,
+  LevelInfo,
+} from "./interfaces/IProfileService";
 
 const XP_PER_MINUTE = 10;
 
 export class ProfileService implements IProfileService {
   constructor(
     private readonly userProfileRepository: IUserProfileRepository,
-    private readonly guildUserStatsRepository: IGuildUserStatsRepository
+    private readonly guildUserStatsRepository: IGuildUserStatsRepository,
+    private readonly guildRepository: IGuildRepository
   ) {}
 
-  async getOrCreateProfile(userId: string): Promise<UserProfile> {
+  async getOrCreateProfile(userId: string, discordUser?: DiscordUserData): Promise<UserProfile> {
     const existing = await this.userProfileRepository.findByUserId(userId);
     if (existing) {
+      // Update Discord info if provided
+      if (discordUser) {
+        await this.userProfileRepository.updateDiscordInfo(userId, {
+          username: discordUser.username,
+          displayName: discordUser.displayName,
+          avatarUrl: discordUser.avatarUrl,
+        });
+      }
       return existing;
     }
 
     return await this.userProfileRepository.create({
       userId,
+      username: discordUser?.username,
+      displayName: discordUser?.displayName,
+      avatarUrl: discordUser?.avatarUrl,
       totalMinutesListened: 0,
       currentLevel: 1,
       totalXp: 0,
@@ -30,6 +49,10 @@ export class ProfileService implements IProfileService {
     return await this.userProfileRepository.findByUserId(userId);
   }
 
+  async getGuild(guildId: string): Promise<Guild | undefined> {
+    return await this.guildRepository.findByGuildId(guildId);
+  }
+
   async getGuildStats(guildId: string, userId: string): Promise<GuildUserStats | undefined> {
     return await this.guildUserStatsRepository.findByGuildAndUser(guildId, userId);
   }
@@ -37,15 +60,18 @@ export class ProfileService implements IProfileService {
   async addXpAndMinutes(
     userId: string,
     guildId: string,
-    minutes: number
+    minutes: number,
+    discordUser?: DiscordUserData,
+    discordGuild?: DiscordGuildData,
+    discordMember?: DiscordMemberData
   ): Promise<{ profile: UserProfile; leveledUp: boolean; newLevel: number }> {
     const xpGained = minutes * XP_PER_MINUTE;
 
-    // Ensure profile exists
-    let profile = await this.getOrCreateProfile(userId);
+    // Ensure profile exists and update Discord info
+    let profile = await this.getOrCreateProfile(userId, discordUser);
     const previousLevel = profile.currentLevel;
 
-    // Update global profile
+    // Update global profile XP
     const updatedProfile = await this.userProfileRepository.addXpAndMinutes(
       userId,
       xpGained,
@@ -65,17 +91,35 @@ export class ProfileService implements IProfileService {
       profile = { ...profile, currentLevel: newLevel };
     }
 
-    // Update guild stats
+    // Upsert guild info if provided
+    if (discordGuild) {
+      await this.guildRepository.upsert({
+        guildId: discordGuild.guildId,
+        name: discordGuild.name,
+        iconUrl: discordGuild.iconUrl,
+        memberCount: discordGuild.memberCount,
+        ownerId: discordGuild.ownerId,
+      });
+    }
+
+    // Update guild user stats
     const existingGuildStats = await this.guildUserStatsRepository.findByGuildAndUser(
       guildId,
       userId
     );
     if (existingGuildStats) {
       await this.guildUserStatsRepository.addXpAndMinutes(guildId, userId, xpGained, minutes);
+      // Update nickname if provided
+      if (discordMember?.nickname) {
+        await this.guildUserStatsRepository.update(existingGuildStats.id, {
+          nickname: discordMember.nickname,
+        });
+      }
     } else {
       await this.guildUserStatsRepository.create({
         guildId,
         userId,
+        nickname: discordMember?.nickname,
         minutesListened: minutes,
         xp: xpGained,
       });
