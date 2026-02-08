@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { cors } from "@elysiajs/cors";
 import { healthLogger } from "@/utils/logger";
 import type { IHealthService } from "./interfaces/IHealthService";
 
@@ -10,7 +11,7 @@ export class HealthServer {
     private readonly port: number,
     private readonly apiKey?: string
   ) {
-    this.app = new Elysia();
+    this.app = new Elysia().use(cors());
 
     if (this.apiKey) {
       this.app.guard({
