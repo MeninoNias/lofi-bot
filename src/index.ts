@@ -27,8 +27,9 @@ import { ProfileCommand } from "@/commands/ProfileCommand";
 import { RankCommand } from "@/commands/RankCommand";
 import { GlobalRankCommand } from "@/commands/GlobalRankCommand";
 import { CommandController } from "@/controllers/CommandController";
+import { StationController } from "@/controllers/StationController";
 import { HealthService } from "@/services/HealthService";
-import { HealthServer } from "@/services/HealthServer";
+import { ApiServer } from "@/server/ApiServer";
 import { botLogger, seedLogger } from "@/utils/logger";
 
 // Validate configuration
@@ -58,8 +59,9 @@ const profileService = new ProfileService(
   guildRepository
 );
 const healthService = new HealthService(client, db, audioService);
-const healthServer = config.api.enabled
-  ? new HealthServer(healthService, config.api.port, config.api.key || undefined)
+const stationController = new StationController(stationService);
+const apiServer = config.api.enabled
+  ? new ApiServer(healthService, stationController, config.api.port, config.api.key || undefined)
   : null;
 
 // Initialize controller and register commands
@@ -96,7 +98,7 @@ async function seedDefaultStation(): Promise<void> {
 client.once(Events.ClientReady, async (readyClient) => {
   botLogger.info({ tag: readyClient.user.tag }, "Logged in");
   await seedDefaultStation();
-  healthServer?.start();
+  apiServer?.start();
 });
 
 client.on(Events.MessageCreate, async (message) => {
@@ -110,7 +112,7 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
 // Graceful shutdown
 process.on("SIGINT", () => {
   botLogger.info("Shutting down...");
-  healthServer?.stop();
+  apiServer?.stop();
   audioService.cleanupAll();
   client.destroy();
   process.exit(0);
