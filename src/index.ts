@@ -66,14 +66,14 @@ const sessionService = new SessionService(sessionRepository, profileService);
 audioService.setSessionService(sessionService);
 const healthService = new HealthService(client, db, audioService);
 const stationController = new StationController(stationService);
-const guildController = new GuildController(audioService, stationService, client);
+const guildController = new GuildController(audioService, stationService, sessionService, client);
 const apiServer = config.api.enabled
   ? new ApiServer(
       healthService,
       stationController,
       guildController,
       config.api.port,
-      config.api.key || undefined,
+      config.api.key || undefined
     )
   : null;
 
