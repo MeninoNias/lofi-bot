@@ -102,11 +102,7 @@ export class ApiServer {
           stationId?: number;
           channelId?: string;
         };
-        const result = await this.guildController.playInGuild(
-          params.guildId,
-          stationId,
-          channelId,
-        );
+        const result = await this.guildController.playInGuild(params.guildId, stationId, channelId);
         set.status = result.status;
         return result.data;
       })

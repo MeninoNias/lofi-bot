@@ -1,6 +1,7 @@
 import type { Client, VoiceChannel } from "discord.js";
 import { ChannelType } from "discord.js";
 import type { IAudioService } from "@/services/interfaces/IAudioService";
+import type { ISessionService } from "@/services/interfaces/ISessionService";
 import type { IStationService } from "@/services/interfaces/IStationService";
 
 interface GuildAudioResponse {
@@ -30,7 +31,8 @@ export class GuildController {
   constructor(
     private readonly audioService: IAudioService,
     private readonly stationService: IStationService,
-    private readonly client: Client,
+    private readonly sessionService: ISessionService,
+    private readonly client: Client
   ) {}
 
   async getGuilds() {
@@ -81,6 +83,19 @@ export class GuildController {
     state.currentStationId = stationId;
     await this.audioService.startStream(guildId, station.url);
 
+    // Create listening sessions for users already in the voice channel
+    const voiceChannel = channel as VoiceChannel;
+    for (const [, member] of voiceChannel.members) {
+      if (!member.user.bot) {
+        await this.sessionService.startSession(guildId, member.id, stationId, {
+          userId: member.id,
+          username: member.user.username,
+          displayName: member.user.displayName,
+          avatarUrl: member.user.avatarURL(),
+        });
+      }
+    }
+
     return { data: await this.buildGuildStatus(guildId, guild), status: 200 };
   }
 
@@ -100,7 +115,17 @@ export class GuildController {
 
   private async buildGuildStatus(
     guildId: string,
-    guild: { name: string; iconURL: (opts?: object) => string | null; memberCount: number; channels: { cache: Map<string, { id: string; name: string; type: ChannelType; members?: Map<string, unknown> }> } },
+    guild: {
+      name: string;
+      iconURL: (opts?: object) => string | null;
+      memberCount: number;
+      channels: {
+        cache: Map<
+          string,
+          { id: string; name: string; type: ChannelType; members?: Map<string, unknown> }
+        >;
+      };
+    }
   ): Promise<GuildStatusResponse> {
     const state = this.audioService.getState(guildId);
 
