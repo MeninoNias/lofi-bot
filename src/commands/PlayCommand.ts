@@ -1,6 +1,7 @@
 import type { VoiceBasedChannel } from "discord.js";
 import type { CommandContext, CommandResult } from "@/models/types";
 import type { IAudioService } from "@/services/interfaces/IAudioService";
+import type { ISessionService } from "@/services/interfaces/ISessionService";
 import type { IStationService } from "@/services/interfaces/IStationService";
 import { commandLogger } from "@/utils/logger";
 import { MessageView } from "@/views/MessageView";
@@ -16,7 +17,8 @@ export class PlayCommand implements ICommand {
 
   constructor(
     private readonly audioService: IAudioService,
-    private readonly stationService: IStationService
+    private readonly stationService: IStationService,
+    private readonly sessionService: ISessionService
   ) {}
 
   async execute(context: CommandContext): Promise<CommandResult> {
@@ -44,6 +46,15 @@ export class PlayCommand implements ICommand {
     try {
       await this.audioService.joinChannel(voiceChannel);
       await this.audioService.startStream(guildId, station.url);
+
+      // Start listening session for the user
+      const userId = message.author.id;
+      await this.sessionService.startSession(guildId, userId, station.id, {
+        userId,
+        username: message.author.username,
+        displayName: message.author.displayName,
+        avatarUrl: message.author.avatarURL(),
+      });
 
       return { success: true, message: this.view.nowPlaying(station.name) };
     } catch (error) {

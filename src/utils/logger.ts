@@ -26,3 +26,4 @@ export const seedLogger = logger.child({ module: "Seed" });
 export const voiceLogger = logger.child({ module: "Voice" });
 export const healthLogger = logger.child({ module: "Health" });
 export const profileLogger = logger.child({ module: "Profile" });
+export const sessionLogger = logger.child({ module: "Session" });
