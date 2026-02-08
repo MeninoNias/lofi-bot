@@ -5,6 +5,7 @@ import type { ISessionService } from "./ISessionService";
 export interface IAudioService {
   getState(guildId: string): GuildAudioState | undefined;
   hasState(guildId: string): boolean;
+  getAllActiveStates(): Array<{ guildId: string; state: GuildAudioState }>;
   joinChannel(channel: VoiceBasedChannel): Promise<GuildAudioState>;
   startStream(guildId: string, streamUrl: string): Promise<void>;
   stopStream(guildId: string): void;

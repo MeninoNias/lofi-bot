@@ -30,6 +30,7 @@ import { RankCommand } from "@/commands/RankCommand";
 import { GlobalRankCommand } from "@/commands/GlobalRankCommand";
 import { CommandController } from "@/controllers/CommandController";
 import { StationController } from "@/controllers/StationController";
+import { GuildController } from "@/controllers/GuildController";
 import { HealthService } from "@/services/HealthService";
 import { ApiServer } from "@/server/ApiServer";
 import { botLogger, seedLogger } from "@/utils/logger";
@@ -65,8 +66,15 @@ const sessionService = new SessionService(sessionRepository, profileService);
 audioService.setSessionService(sessionService);
 const healthService = new HealthService(client, db, audioService);
 const stationController = new StationController(stationService);
+const guildController = new GuildController(audioService, stationService, client);
 const apiServer = config.api.enabled
-  ? new ApiServer(healthService, stationController, config.api.port, config.api.key || undefined)
+  ? new ApiServer(
+      healthService,
+      stationController,
+      guildController,
+      config.api.port,
+      config.api.key || undefined,
+    )
   : null;
 
 // Initialize controller and register commands

@@ -35,6 +35,10 @@ export class AudioService implements IAudioService {
     return this.guildStates.has(guildId);
   }
 
+  getAllActiveStates(): Array<{ guildId: string; state: GuildAudioState }> {
+    return Array.from(this.guildStates.entries()).map(([guildId, state]) => ({ guildId, state }));
+  }
+
   async joinChannel(channel: VoiceBasedChannel): Promise<GuildAudioState> {
     const guildId = channel.guild.id;
 
@@ -61,6 +65,7 @@ export class AudioService implements IAudioService {
       isPlaying: false,
       currentStationId: null,
       channelId: channel.id,
+      connectedSince: new Date(),
     };
 
     this.guildStates.set(guildId, state);

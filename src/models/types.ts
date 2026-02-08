@@ -10,6 +10,7 @@ export interface GuildAudioState {
   isPlaying: boolean;
   currentStationId: number | null;
   channelId: string;
+  connectedSince: Date;
 }
 
 export interface CommandContext {
