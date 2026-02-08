@@ -14,12 +14,18 @@ import { config } from "@/config";
 import type { GuildAudioState } from "@/models/types";
 import { streamLogger, playerLogger, logger, voiceLogger } from "@/utils/logger";
 import type { IAudioService } from "./interfaces/IAudioService";
+import type { ISessionService } from "./interfaces/ISessionService";
 import type { IStreamService } from "./interfaces/IStreamService";
 
 export class AudioService implements IAudioService {
   private readonly guildStates = new Map<string, GuildAudioState>();
+  private sessionService?: ISessionService;
 
   constructor(private readonly streamService: IStreamService) {}
+
+  setSessionService(sessionService: ISessionService): void {
+    this.sessionService = sessionService;
+  }
 
   getState(guildId: string): GuildAudioState | undefined {
     return this.guildStates.get(guildId);
@@ -147,6 +153,11 @@ export class AudioService implements IAudioService {
       // Delete first to prevent re-entrant calls from the Destroyed event
       this.guildStates.delete(guildId);
 
+      // End all listening sessions for this guild
+      this.sessionService?.endAllGuildSessions(guildId).catch((error) => {
+        voiceLogger.error({ guildId, err: error }, "Failed to end guild sessions during cleanup");
+      });
+
       state.isPlaying = false;
       if (state.ffmpegProcess) {
         state.ffmpegProcess.kill();
@@ -170,6 +181,15 @@ export class AudioService implements IAudioService {
 
     // Check if someone left the bot's channel
     if (oldState.channelId === state.channelId && oldState.channelId !== newState.channelId) {
+      const userId = oldState.member?.id;
+
+      // End the leaving user's session
+      if (userId && !oldState.member?.user.bot) {
+        this.sessionService?.endSession(guildId, userId).catch((error) => {
+          voiceLogger.error({ guildId, userId, err: error }, "Failed to end user session on leave");
+        });
+      }
+
       const channel = oldState.channel;
       if (!channel) return;
 

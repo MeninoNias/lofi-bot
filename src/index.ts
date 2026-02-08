@@ -12,10 +12,12 @@ import { StationRepository } from "@/repositories/StationRepository";
 import { UserProfileRepository } from "@/repositories/UserProfileRepository";
 import { GuildUserStatsRepository } from "@/repositories/GuildUserStatsRepository";
 import { GuildRepository } from "@/repositories/GuildRepository";
+import { SessionRepository } from "@/repositories/SessionRepository";
 import { AudioService } from "@/services/AudioService";
 import { StationService } from "@/services/StationService";
 import { StreamService } from "@/services/StreamService";
 import { ProfileService } from "@/services/ProfileService";
+import { SessionService } from "@/services/SessionService";
 import { PlayCommand } from "@/commands/PlayCommand";
 import { StopCommand } from "@/commands/StopCommand";
 import { StationsCommand } from "@/commands/StationsCommand";
@@ -50,6 +52,7 @@ const stationRepository = new StationRepository(db);
 const userProfileRepository = new UserProfileRepository(db);
 const guildUserStatsRepository = new GuildUserStatsRepository(db);
 const guildRepository = new GuildRepository(db);
+const sessionRepository = new SessionRepository(db);
 const stationService = new StationService(stationRepository);
 const streamService = new StreamService();
 const audioService = new AudioService(streamService);
@@ -58,6 +61,8 @@ const profileService = new ProfileService(
   guildUserStatsRepository,
   guildRepository
 );
+const sessionService = new SessionService(sessionRepository, profileService);
+audioService.setSessionService(sessionService);
 const healthService = new HealthService(client, db, audioService);
 const stationController = new StationController(stationService);
 const apiServer = config.api.enabled
@@ -65,9 +70,9 @@ const apiServer = config.api.enabled
   : null;
 
 // Initialize controller and register commands
-const commandController = new CommandController(profileService);
+const commandController = new CommandController();
 commandController.registerCommands([
-  new PlayCommand(audioService, stationService),
+  new PlayCommand(audioService, stationService, sessionService),
   new StopCommand(audioService),
   new StationsCommand(stationService),
   new AddStationCommand(stationService),
@@ -98,6 +103,7 @@ async function seedDefaultStation(): Promise<void> {
 client.once(Events.ClientReady, async (readyClient) => {
   botLogger.info({ tag: readyClient.user.tag }, "Logged in");
   await seedDefaultStation();
+  await sessionService.cleanupOrphanedSessions();
   apiServer?.start();
 });
 
@@ -110,7 +116,7 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
 });
 
 // Graceful shutdown
-process.on("SIGINT", () => {
+process.on("SIGINT", async () => {
   botLogger.info("Shutting down...");
   apiServer?.stop();
   audioService.cleanupAll();

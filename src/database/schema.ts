@@ -55,3 +55,18 @@ export const guildUserStats = pgTable("guild_user_stats", {
 
 export type GuildUserStats = typeof guildUserStats.$inferSelect;
 export type NewGuildUserStats = typeof guildUserStats.$inferInsert;
+
+export const listeningSessions = pgTable("listening_sessions", {
+  id: serial("id").primaryKey(),
+  guildId: varchar("guild_id", { length: 255 }).notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  stationId: integer("station_id").notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  finishedAt: timestamp("finished_at"),
+  durationMinutes: integer("duration_minutes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ListeningSession = typeof listeningSessions.$inferSelect;
+export type NewListeningSession = typeof listeningSessions.$inferInsert;
