@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.7.0](https://github.com/MeninoNias/lofi-bot/compare/v2.6.0...v2.7.0) (2026-02-08)
+
+
+### Features
+
+* add guild playback API endpoints ([1ccd28f](https://github.com/MeninoNias/lofi-bot/commit/1ccd28f058a06e682721d81770215e1144e34fad))
+* add guild playback API endpoints for dashboard control panel ([16bc270](https://github.com/MeninoNias/lofi-bot/commit/16bc27051c6027bb1e7bc8f6d204d3e5368cd9c6)), closes [#45](https://github.com/MeninoNias/lofi-bot/issues/45)
+* add session-based listening time tracking ([644b85c](https://github.com/MeninoNias/lofi-bot/commit/644b85c13a72ecd3244172f28c9ab47817293f02)), closes [#38](https://github.com/MeninoNias/lofi-bot/issues/38) [#46](https://github.com/MeninoNias/lofi-bot/issues/46)
+* enable CORS and expose API config in docker-compose ([db2cb2b](https://github.com/MeninoNias/lofi-bot/commit/db2cb2bd206d02c5309f9bec716fd8fa8a8a541d))
+* enable CORS and expose API config in docker-compose ([c153814](https://github.com/MeninoNias/lofi-bot/commit/c1538147c86091c052f256f4efcd6221371791c7))
+* session-based listening time tracking ([7c25fff](https://github.com/MeninoNias/lofi-bot/commit/7c25fffcd3dd4e9c3c2180792932bb043e08b03d))
+
 ## [2.6.0](https://github.com/MeninoNias/lofi-bot/compare/v2.5.0...v2.6.0) (2026-01-30)
 
 
