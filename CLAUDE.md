@@ -49,7 +49,8 @@ src/
 ├── models/               # TypeScript types
 ├── repositories/         # Data access layer
 ├── services/             # Business logic
-├── controllers/          # Command routing
+├── server/               # HTTP API server (Elysia.js)
+├── controllers/          # Command routing + HTTP API controllers
 ├── commands/             # Individual command handlers
 ├── views/                # Response formatting
 └── utils/                # Utility functions (permissions, logging)
@@ -68,8 +69,9 @@ src/
 - `StationService`: CRUD operations for radio stations with ID/name/default resolution
 - `ProfileService`: XP tracking, level calculations, and user profile management
 - `HealthService`: Provides health status (Discord, database, audio connections)
-- `HealthServer`: Elysia.js HTTP server for health check endpoint
-- `CommandController`: Routes commands to handlers with error handling and XP rewards
+- `ApiServer`: Elysia.js HTTP server with CORS, health check and station REST API endpoints
+- `CommandController`: Routes Discord commands to handlers with error handling and XP rewards
+- `StationController`: HTTP API controller for station CRUD operations
 - `StationRepository`: Database access for stations table
 - `UserProfileRepository`: Database access for user profiles
 - `GuildRepository`: Database access for guild info
@@ -94,16 +96,25 @@ Uses pino for structured logging with child loggers per module:
 ### Startup Behavior
 
 - Default station seeding on first run (if no stations exist)
-- Health check HTTP server starts after Discord login (if enabled)
+- API server starts after Discord login (if enabled)
 - Graceful shutdown handler registered for SIGINT
 - Suppresses TimeoutNegativeWarning from @discordjs/voice
 
-### Health Check API
+### HTTP API (ApiServer)
 
-HTTP endpoint powered by Elysia.js for external monitoring (Kubernetes, Docker, etc.):
+REST API powered by Elysia.js with CORS support (`@elysiajs/cors`). Serves both health monitoring and station management for the dashboard.
 
-- `GET /` - API info
-- `GET /health` - Health status (200 OK or 503 Service Unavailable)
+#### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/` | API info with all available endpoints |
+| `GET` | `/health` | Health status (200 OK or 503 Service Unavailable) |
+| `GET` | `/api/stations` | List all stations |
+| `GET` | `/api/stations/:id` | Get a specific station |
+| `POST` | `/api/stations` | Create a new station (body: `name`, `url`, `description?`) |
+| `DELETE` | `/api/stations/:id` | Delete a station |
+| `PUT` | `/api/stations/:id/default` | Set a station as default |
 
 #### Authentication
 
@@ -118,7 +129,7 @@ Responses:
 
 If `API_KEY` is not set, endpoints are publicly accessible (no authentication required).
 
-#### Response format
+#### Health response format
 ```json
 {
   "status": "healthy",
