@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { healthLogger } from "@/utils/logger";
 import type { IHealthService } from "@/services/interfaces/IHealthService";
+import type { IVersionService } from "@/services/interfaces/IVersionService";
 import type { StationController } from "@/controllers/StationController";
 import type { GuildController } from "@/controllers/GuildController";
 
@@ -12,6 +13,7 @@ export class ApiServer {
     private readonly healthService: IHealthService,
     private readonly stationController: StationController,
     private readonly guildController: GuildController,
+    private readonly versionService: IVersionService,
     private readonly port: number,
     private readonly apiKey?: string
   ) {
@@ -35,6 +37,7 @@ export class ApiServer {
         version: "1.0.0",
         endpoints: [
           "/health",
+          "/api/version",
           "/api/stations",
           "/api/stations/:id",
           "/api/stations/:id/default",
@@ -45,6 +48,7 @@ export class ApiServer {
           "/api/guilds/stop-all",
         ],
       }))
+      .get("/api/version", async () => this.versionService.getVersion())
       .get("/health", async ({ set }) => {
         const status = await this.healthService.getStatus();
         if (status.status === "unhealthy") {

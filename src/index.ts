@@ -32,6 +32,7 @@ import { CommandController } from "@/controllers/CommandController";
 import { StationController } from "@/controllers/StationController";
 import { GuildController } from "@/controllers/GuildController";
 import { HealthService } from "@/services/HealthService";
+import { VersionService } from "@/services/VersionService";
 import { ApiServer } from "@/server/ApiServer";
 import { botLogger, seedLogger } from "@/utils/logger";
 
@@ -65,6 +66,7 @@ const profileService = new ProfileService(
 const sessionService = new SessionService(sessionRepository, profileService);
 audioService.setSessionService(sessionService);
 const healthService = new HealthService(client, db, audioService);
+const versionService = new VersionService(healthService);
 const stationController = new StationController(stationService);
 const guildController = new GuildController(audioService, stationService, sessionService, client);
 const apiServer = config.api.enabled
@@ -72,6 +74,7 @@ const apiServer = config.api.enabled
       healthService,
       stationController,
       guildController,
+      versionService,
       config.api.port,
       config.api.key || undefined
     )
