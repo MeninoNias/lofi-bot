@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.8.0](https://github.com/MeninoNias/lofi-bot/compare/v2.7.0...v2.8.0) (2026-07-15)
+
+
+### Features
+
+* implement versioning API with GitHub integration and add Versio… ([364c888](https://github.com/MeninoNias/lofi-bot/commit/364c88836eed756fa930488c184c328c09d34ab8))
+* implement versioning API with GitHub integration and add VersionService ([08dda3a](https://github.com/MeninoNias/lofi-bot/commit/08dda3a56c84802d5716dda663d7515bc1e47945))
+* session-based listening time tracking & guild playback API ([ea0573e](https://github.com/MeninoNias/lofi-bot/commit/ea0573e4c4a77b9b07823bf89695610bf3386d2a))
+
+
+### Bug Fixes
+
+* create listening sessions when play is triggered via API ([ca2c43e](https://github.com/MeninoNias/lofi-bot/commit/ca2c43e5ede41399a3a9767d8dfcf730986720c7)), closes [#49](https://github.com/MeninoNias/lofi-bot/issues/49)
+
 ## [2.7.0](https://github.com/MeninoNias/lofi-bot/compare/v2.6.0...v2.7.0) (2026-02-08)
 
 
